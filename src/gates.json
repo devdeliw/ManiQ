@@ -1,0 +1,241 @@
+{
+  "single_qubit_gates": [
+    {
+      "name": "x",
+      "latex": "X"
+    },
+    {
+      "name": "y",
+      "latex": "Y"
+    },
+    {
+      "name": "z",
+      "latex": "Z"
+    },
+    {
+      "name": "h",
+      "latex": "H"
+    },
+    {
+      "name" : "sdg", 
+      "latex" : "S^\\dagger"
+    },
+    {
+      "name": "s",
+      "latex": "S"
+    },
+    {
+      "name": "t",
+      "latex": "T"
+    },
+    {
+      "name" : "p", 
+      "latex" : "p" 
+    },
+    {
+      "name" : "id",
+      "latex" : "I"
+    },
+    {
+      "name": "tdg",
+      "latex": "T^\\dagger"
+    },
+    {
+      "name": "sx",
+      "latex": "\\sqrt{X}"
+    },
+    {
+      "name": "sxdg",
+      "latex": "\\sqrt{X}^\\dagger"
+    },
+    {
+      "name": "rx",
+      "latex": "R_x"
+    },
+    {
+      "name": "ry",
+      "latex": "R_y"
+    },
+    {
+      "name": "rz",
+      "latex": "R_z"
+    },
+    {
+      "name": "u1",
+      "latex": "U_1"
+    },
+    {
+      "name": "u2",
+      "latex": "U_2"
+    },
+    {
+      "name": "u3",
+      "latex": "U_3"
+    },
+    {
+      "name": "u",
+      "latex": "U"
+    },
+    {
+      "name": "r",
+      "latex": "R"
+    }
+  ],
+  "cx_like_gates": [
+    {
+      "name": "cx",
+      "latex": "CNOT"
+    },
+    {
+      "name": "cy",
+      "latex": "CY"
+    },
+    {
+      "name": "cz",
+      "latex": "CZ"
+    }
+  ],
+  "cphase_gates": [
+    {
+      "name": "cp",
+      "latex": "CP"
+    },
+    {
+      "name": "cphase",
+      "latex": "CPhase"
+    },
+    {
+      "name": "cz",
+      "latex": "CZ"
+    },
+    {
+      "name": "czz",
+      "latex": "CZZ"
+    },
+    {
+      "name": "crz",
+      "latex": "CR_z"
+    },
+    {
+      "name": "cs",
+      "latex": "CS"
+    },
+    {
+      "name": "ct",
+      "latex": "CT"
+    },
+    {
+      "name": "cu1",
+      "latex": "CU_1"
+    },
+    {
+      "name": "cu3",
+      "latex": "CU_3"
+    },
+    {
+      "name": "cu",
+      "latex": "CU"
+    }
+  ],
+  "general_controlled_gates": [
+    {
+      "name": "ccx",
+      "latex": "Toffoli"
+    },
+    {
+      "name" : "ch", 
+      "latex" : "H"
+    },
+    {
+      "name": "csdg", 
+      "latex": "S^\\dagger"
+    }, 
+    {
+      "name" : "csx", 
+      "latex": "\\sqrt{X}"
+    },
+    {
+      "name": "ccz",
+      "latex": "CCZ"
+    },
+    {
+      "name": "cxx",
+      "latex": "CXX"
+    },
+    {
+      "name": "crx",
+      "latex": "CR_x"
+    },
+    {
+      "name": "cry",
+      "latex": "CR_y"
+    },
+    {
+      "name": "cr",
+      "latex": "CR"
+    },
+    {
+      "name": "cswap",
+      "latex": "Cswap"
+    }
+  ],
+  "multi_qubit_gates": [
+    {
+      "name": "iswap",
+      "latex": "iSWAP"
+    },
+    {
+      "name": "swap",
+      "latex": "SWAP"
+    },
+    { 
+      "name" : "dcx", 
+      "latex" : "DCX"
+    },
+    {
+      "name": "xx",
+      "latex": "XX"
+    },
+    {
+      "name": "yy",
+      "latex": "YY"
+    },
+    {
+      "name": "zz",
+      "latex": "ZZ"
+    },
+    {
+      "name": "xy",
+      "latex": "XY"
+    },
+    {
+      "name": "rxx",
+      "latex": "R_{XX}"
+    },
+    {
+      "name": "ryy",
+      "latex": "R_{YY}"
+    },
+    {
+      "name": "rzz",
+      "latex": "R_{ZZ}"
+    },
+    {
+      "name": "rzx",
+      "latex": "R_{ZX}"
+    },
+    {
+      "name": "ecr",
+      "latex": "ECR"
+    },
+    {
+      "name": "xx_minus_yy",
+      "latex": "XX - YY"
+    }, 
+    {
+      "name": "xx_plus_yy", 
+      "latex": "XX + YY"
+    }
+  ]
+}
+
