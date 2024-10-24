@@ -14,7 +14,7 @@ class Gates(Scene):
 
     # default single qubit gates
     def single(self, name, x, y, color = MAROON_D, params=[]):
-        label = MathTex(rf"{name}", font_size=60)
+        label = MathTex(rf"{name}", font_size=55)
 
         if params:
             param_str = ", ".join([f"{param:.2f}" for param in params])
@@ -159,7 +159,6 @@ class Gates(Scene):
 
     def multi(self, name, x1, y1, y2, color = MAROON_D, params = None, idxs = None): 
         # gate spanning multiple qubits
-        print('SKIBIDI')
         label = MathTex(rf"{name}", 
                         font_size = 60).move_to([x1+0.5, min(y1,y2) + abs(y1-y2) / 2, 0])
 
@@ -278,16 +277,26 @@ class BuildCircuit(Scene):
                 mobjects.append(gate) 
 
             if len(qubits) > 1: 
-                q0x += int(gate.width + 0.5)
-                q1x += int(gate.width + 0.5)
-            elif qubits == [0]: q0x += int(gate.width + 0.5)
-            elif qubits == [1]: q1x += int(gate.width + 0.5)
+                q0x += gate.width + 0.8
+                q1x += gate.width + 0.8
+            elif qubits == [0]: q0x += gate.width + 0.8
+            elif qubits == [1]: q1x += gate.width + 0.8
+
+        q0wire = Line(start=np.array([-5, 1, 0]),
+                      end=np.array([max(q0x, q1x), 1, 0]),
+                      stroke_width = 8)
+        q1wire = Line(start=np.array([-5, -1, 0]), 
+                      end=np.array([max(q0x, q1x), -1, 0]), 
+                      stroke_width = 8)
+
+        mobjects.append(q0wire)
+        mobjects.append(q1wire)
 
         return mobjects
 
 
 if __name__ == "__main__": 
-    qc = random_circuit(2, max_operands = 2, depth = 4, seed = 42)
+    qc = random_circuit(2, max_operands = 2, depth = 4, seed = 25)
     print(qc)
 
     config.pixel_height = 480  # Set pixel height for low resolution
