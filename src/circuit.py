@@ -9,28 +9,29 @@ import json
 class Gates(Scene):
     def construct(self):
 
-        ctext = self.measurement(0, 0)  
+        ctext = self.cgate('CU1', 0, 1, -1, color = 'BLUE_D')  
         self.add(ctext)
 
     # default single qubit gates
-    def single(self, name, x, y, params = []): 
-        # general single-qubit unitary gate
-        if not params: 
-            label = MathTex(rf"{name}", font_size = 80)
-        else:
-            label1 = MathTex(rf"{name}", font_size = 80) 
+    def single(self, name, x, y, color = MAROON_D, params=[]):
+        label = MathTex(rf"{name}", font_size=60)
 
-            param_str = ", ".join(
-                    [f"{param:.2f}" for param in params])
-            label2 = MathTex(rf"{param_str}", 
-                             font_size = 40).next_to(label1, DOWN)
-            label = VGroup(label1, label2) 
-        
-        border = SurroundingRectangle(label, 
-                                      buff = 0.2, 
-                                      color = WHITE)
-        gate = VGroup(border, label).move_to([x, y, 0])
+        if params:
+            param_str = ", ".join([f"{param:.2f}" for param in params])
+            label2 = MathTex(rf"{param_str}", font_size=30).next_to(label, DOWN * 0.1)
+            label.shift(UP * 0.1)  
+        else:
+            label2 = MathTex(rf"0.00", font_size=30).set_opacity(0)  
+
+        label_group = VGroup(label, label2)
+        border = Rectangle(width=label_group.width+0.4, height=1,
+                           fill_color=color, fill_opacity=1, 
+                           color=color).move_to([x, y, 0])
+        label_group.move_to(border.get_center())
+        gate = VGroup(border, label_group).move_to([x, y, 0])
+
         return gate
+
 
     def measurement(self, x, y): 
         # measurement qubit
@@ -41,14 +42,11 @@ class Gates(Scene):
                            dot.get_center(), np.array([0, 0.1, 0])))
         line = Line(dot.get_center(), 
                     np.array([x + 0.3, y + 0.3, 0]),
-                    stroke_width = 7)
+                    stroke_width = 5)
         square = Square(side_length = 1).move_to([x, y, 0])
         group = VGroup(dot, semicirc, line, square)
 
-        gate = VGroup(
-            SurroundingRectangle(group, color = WHITE),
-            group) 
-        return gate
+        return group
 
     # controlled pauli gates
     # each has a different design 
@@ -90,11 +88,7 @@ class Gates(Scene):
                   radius = 0.15,
                   color = MAROON_C)
         # target qubit
-        label = MathTex(r"Y", font_size = 80)
-        square = SurroundingRectangle(label, 
-                                      buff = 0.2, 
-                                      color = MAROON_C)
-        circle = VGroup(square, label).move_to([x1, y2, 0])
+        target = self.single("Y", x1, y2, color=MAROON_C)
 
         # line in between
         if y2 < y1:
@@ -102,13 +96,12 @@ class Gates(Scene):
         else:
             end = np.array([x1, y2 - 0.5, 0])
 
-
         line = Line(start = np.array([x1, y1, 0]),
                     end = end,
                     color = MAROON_C,
                     stroke_width = 5)
 
-        gate = VGroup(dot, circle, line)
+        gate = VGroup(dot, target, line)
         return gate
     
     def ctext(self, x1, y1, y2, params = None): 
@@ -136,19 +129,19 @@ class Gates(Scene):
         return gate 
 
     # general controlled unitary gate
-    def cgate(self, name, x1, y1, y2, params = None): 
+    def cgate(self, name, x1, y1, y2, color = MAROON_D, params = None): 
         # control qubit
-        dot = Dot(point = np.array([x1, y1, 0]),
-                  radius = 0.15)
+        dot = Dot(point=np.array([x1, y1, 0]),
+                  radius=0.15, color=color)
         label = MathTex(rf"{name}", font_size = 80)
 
         if params: 
             param_text = MathTex(rf"{params}", 
                                  font_size = 40).next_to(label, DOWN)
-            label = VGroup(label, param_text) 
+            label = VGroup(label, param_text)
 
-        square = SurroundingRectangle(label, buff = 0.2, color = WHITE)
-        circle = VGroup(square, label).move_to([x1, y2, 0])
+        target = self.single(name, x1, y2, 
+                             color=color)
 
         # line in between
         if y2 < y1:
@@ -156,44 +149,45 @@ class Gates(Scene):
         else:
             end = np.array([x1, y2 - 0.5, 0])
 
-        line = Line(start = np.array([x1, y1, 0]),
-                    end = end,
-                    stroke_width = 5)
+        line = Line(start=np.array([x1, y1, 0]),
+                    end=end,
+                    stroke_width=5, 
+                    color=color)
 
-        gate = VGroup(dot, circle, line)
+        gate = VGroup(dot, target, line)
         return gate
 
-    def multi(self, name, x1, y1, y2, params = None, idxs = None): 
+    def multi(self, name, x1, y1, y2, color = MAROON_D, params = None, idxs = None): 
         # gate spanning multiple qubits
+        print('SKIBIDI')
         label = MathTex(rf"{name}", 
-                        font_size = 80).move_to([x1+0.5, min(y1,y2) + abs(y1-y2) / 2, 0])
-        #dot1 = Dot(np.array([x1, y1, 0]))
-        #ot2 = Dot(np.array([x1, y2, 0])) 
+                        font_size = 60).move_to([x1+0.5, min(y1,y2) + abs(y1-y2) / 2, 0])
 
         group = VGroup(label)
 
         if params: 
             param_str = ", ".join([f"{param:.2f}" for param in params])
-            param_str = MathTex(param_str, font_size = 40).next_to(label, DOWN)
+            param_str = MathTex(param_str, 
+                                font_size = 40).next_to(label, DOWN*1)
             group = VGroup(label, param_str)
-        group_rect = SurroundingRectangle(group, color = WHITE, fill_opacity
-                                          = 0).set_opacity(1)
+        group_rect = Rectangle(width=label.width + 0.1,
+                               height=label.height, 
+                               color = color).move_to(label.get_center())
         if idxs: 
             idx1 = MathTex(rf"{idxs[0]}",
-                           font_size = 80).move_to([x1-0.3, max(y1, y2), 0])
+                           font_size = 60).move_to([x1-0.3, max(y1, y2), 0])
             idx2= MathTex(rf"{idxs[1]}", 
-                           font_size = 80).move_to([x1-0.3, min(y1, y2), 0])
+                           font_size = 60).move_to([x1-0.3, min(y1, y2), 0])
             idxs_ = VGroup(idx1, idx2) 
             idxs_.next_to(group_rect, LEFT)
             group = VGroup(group, idxs_)
 
         gate = VGroup(
-                SurroundingRectangle(
-                    group, 
-                    color = MAROON_E,
-                    buff = 0.2, 
-                    fill_opacity = 1), 
-                group)
+                Rectangle(
+                    width=group.width + 0.3,
+                    height=3, 
+                    color = MAROON_E).move_to(group.get_center()),
+                group).move_to(label.get_center())
         return gate
 
 class BuildCircuit(Scene):
@@ -248,7 +242,10 @@ class BuildCircuit(Scene):
 
             if len(qubits) > 1:
                 x = max(q0x, q1x)
-                y1, y2 = 1, -1
+                if qubits == [0, 1]: 
+                    y1, y2 = 1, -1
+                else: 
+                    y1, y2 = -1, 1
             else:
                 if qubits == [0]:
                     x, y = q0x, 1
@@ -260,13 +257,13 @@ class BuildCircuit(Scene):
                 gate = Gates().single(name, x=x, y=y, params=params)
                 mobjects.append(gate)
             if category == 'cx_like_gates':
-                if name == 'cx' or name == 'cnot':
+                if name.lower() == 'cx' or name.lower() == 'cnot':
                     gate = Gates().cx(x, y1, y2)
                     mobjects.append(gate) 
-                if name == 'cy': 
+                if name.lower() == 'cy': 
                     gate = Gates().cx(x, y1, y2)
                     mobjects.append(gate)
-                if name == 'cz': 
+                if name.lower() == 'cz': 
                     gate = Gates().ctext(x, y1, y2)
                     mobjects.append(gate)
             if category == 'cphase_gates': 
@@ -281,16 +278,16 @@ class BuildCircuit(Scene):
                 mobjects.append(gate) 
 
             if len(qubits) > 1: 
-                q0x += int(gate.width + 1)
-                q1x += int(gate.width + 1)
-            elif qubits == [0]: q0x += int(gate.width + 0.8)
-            elif qubits == [1]: q1x += int(gate.width + 0.8)
+                q0x += int(gate.width + 0.5)
+                q1x += int(gate.width + 0.5)
+            elif qubits == [0]: q0x += int(gate.width + 0.5)
+            elif qubits == [1]: q1x += int(gate.width + 0.5)
 
         return mobjects
 
 
 if __name__ == "__main__": 
-    qc = random_circuit(2, max_operands = 2, depth = 4, seed = 28)
+    qc = random_circuit(2, max_operands = 2, depth = 4, seed = 42)
     print(qc)
 
     config.pixel_height = 480  # Set pixel height for low resolution
