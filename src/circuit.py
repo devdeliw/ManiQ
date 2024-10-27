@@ -3,19 +3,21 @@ from qiskit import QuantumCircuit
 from qiskit.circuit.random import random_circuit
 import numpy as np
 import pandas as pd
+import math
+import copy
 import json
 
 
 class Gates(Scene):
     def construct(self):
 
-        ctext = self.cgate('CU1', 0, 1, -1, color = 'BLUE_D')  
+        ctext = self.multi('CU1', 0, 1, -3, color = 'BLUE_D', idxs = [0, 1],
+                           params = [1, 0])  
         self.add(ctext)
 
     # default single qubit gates
     def single(self, name, x, y, color = MAROON_D, params=[]):
         label = MathTex(rf"{name}", font_size=55)
-
         if params:
             param_str = ", ".join([f"{param:.2f}" for param in params])
             label2 = MathTex(rf"{param_str}", font_size=30).next_to(label, DOWN * 0.1)
@@ -62,10 +64,10 @@ class Gates(Scene):
         plus = VGroup(
                 Line(start = np.array([x1- 0.3, y2, 0]), 
                      end = np.array([x1+ 0.3, y2, 0]),
-                     stroke_width = 5), 
+                     stroke_width = 2), 
                 Line(start = np.array([x1, y2 - 0.3, 0]),
                      end = np.array([x1, y2 + 0.3, 0]),
-                     stroke_width = 5))
+                     stroke_width = 2))
         circle = VGroup(circle, plus)
 
         # line in between   
@@ -119,17 +121,35 @@ class Gates(Scene):
                     color = BLUE_B)
 
         if params: 
-            param_text = MathTex(rf"{params[0]} \; {params[1][0]:.2f}",
-                                 font_size = 30).move_to(
-                                         [x1+0.9, min(y1, y2) + abs(y2-y1)/2, 0])
+            if params[1]: 
+                param_text = MathTex(rf"{params[0]} \; ({params[1][0]:.1f})",
+                                     font_size = 30).move_to(
+                                             [x1+0.6, min(y1,y2)+abs(y2-y1)/2, 0])
+            else: 
+                param_text = MathTex(rf"{params[0]}", font_size
+                                     = 30).move_to(
+                                             [x1+0.4, min(y1,y2)+abs(y2-y1)/2, 0])
             gate = VGroup(dot1, dot2, line, param_text)
         else: 
             gate = VGroup(dot1, dot2, line)
 
         return gate 
 
+    def swap(self, x1, y1, y2): 
+        cross1 = Cross(stroke_color = BLUE_B, 
+                       scale_factor = 0.25, stroke_width = 4).move_to([x1, y1, 0])
+        cross2 = Cross(stroke_color = BLUE_B,
+                       scale_factor = 0.25, stroke_width = 4).move_to([x1, y2, 0])
+
+        line = Line(start = np.array([x1,y1,0]),
+                    end = np.array([x1,y2,0]), 
+                    color = BLUE_B)
+
+        gate = VGroup(cross1, cross2, line)
+        return gate
+
     # general controlled unitary gate
-    def cgate(self, name, x1, y1, y2, color = MAROON_D, params = None): 
+    def cgate(self, name, x1, y1, y2, y3 = None, color = MAROON_D, params = None): 
         # control qubit
         dot = Dot(point=np.array([x1, y1, 0]),
                   radius=0.15, color=color)
@@ -169,9 +189,9 @@ class Gates(Scene):
             param_str = MathTex(param_str, 
                                 font_size = 40).next_to(label, DOWN*1)
             group = VGroup(label, param_str)
+
         group_rect = Rectangle(width=label.width + 0.1,
-                               height=label.height, 
-                               color = color).move_to(label.get_center())
+                               height=label.height).move_to(label.get_center())
         if idxs: 
             idx1 = MathTex(rf"{idxs[0]}",
                            font_size = 60).move_to([x1-0.3, max(y1, y2), 0])
@@ -184,21 +204,43 @@ class Gates(Scene):
         gate = VGroup(
                 Rectangle(
                     width=group.width + 0.3,
-                    height=3, 
-                    color = MAROON_E).move_to(group.get_center()),
-                group).move_to(label.get_center())
+                    height=math.ceil(group.height + 0.4), 
+                    fill_color=color, color=color,
+                    fill_opacity=1).move_to(group.get_center()),
+                group).move_to([x1, np.mean([y1, y2]), 0])
         return gate
 
 class BuildCircuit(Scene):
-    def construct(self, qc, run_time = 5):
-
+    # build a visual manim circuit from a qiskit QuantumCircuit() object
+    def construct(self, qc, run_time=0.5):
         mobjects = self.build(qc)
+        
         circuit = VGroup(*mobjects)
-        self.play(Write(circuit), run_time = run_time)
+        wire_pos = list(range(-qc.num_qubits + 1, qc.num_qubits, 2)) 
 
-        return 
+        wires = VGroup()
+        idx = qc.num_qubits
+        for wire in wire_pos: 
+            wires.add(Line(start=np.array([circuit.get_center()[0]-circuit.width/2 - 0.3, wire, 0]), 
+                             end=np.array([circuit.get_center()[0]+circuit.width/2 + 0.3, wire, 0]), 
+                             stroke_width = 2))
+            wires.add(MathTex(rf"q_{idx-1}", 
+                              font_size = 55).move_to(
+                                  [circuit.get_center()[0]-circuit.width/2 - 1, wire, 0]))
+            idx-=1
+        
+        circuit_full = VGroup(wires, circuit).move_to([0, 0, 0])
+        scaling_factor = min(config.frame_width/circuit_full.width,
+                             config.frame_height/circuit_full.height)
+        circuit_full.scale(scaling_factor)
 
-    def decompose(self, qc): 
+        # Step 5: Animate the circuiti
+        self.play(Write(circuit_full), run_time=run_time)
+
+    def decompose(self, qc):
+        # provided a qiskit QuantumCircuit() object
+        # extract the visual parameters for building 
+        # in Manim
         with open('gates.json', 'r') as file:
             quantum_gates = json.load(file)
 
@@ -212,13 +254,13 @@ class BuildCircuit(Scene):
         categories, names, params, idxs = [], [], [], []
         for instruction in qc.data:
             category, latex = categorize_gate(instruction.operation.name)
-
             categories.append(category)
-            names.append(latex)
-            params.append([i for i in instruction.operation.params if isinstance(i, np.float64)])
-            idxs.append([qc.find_bit(qubit).index for qubit in instruction.qubits])
 
-        print(names)
+            names.append(latex)
+            params.append([i for i in instruction.operation.params if
+                           isinstance(i, (float, np.floating))])
+
+            idxs.append([qc.find_bit(qubit).index for qubit in instruction.qubits])
 
         circuit_data = pd.DataFrame({
             'category': categories,
@@ -229,74 +271,184 @@ class BuildCircuit(Scene):
 
         return circuit_data
 
-    def build(self, qc):
+
+    def build_flat(self, qc, gap=0.8):
+        # for two qubit circuits
         circuit_data = self.decompose(qc)
-        mobjects = []
+        q0x, q1x = 0, 0
+        circuit = []
 
-        q0x = -3
-        q1x = -3
+        # algorithm to place quantum gates on a circuit
         for idx, elements in circuit_data.iterrows():
-            category, name = elements.iloc[0], elements.iloc[1]
-            params, qubits = elements.iloc[2], elements.iloc[3]
-
-            if len(qubits) > 1:
+            category, name = elements['category'], elements['names']
+            params, qubits = elements['params'], elements['idxs']
+            
+            x, y, q0, q1, reduce = 0, 0, False, False, False
+            if len(qubits) > 1:  
+                y1, y2 = (1, -1) if qubits == [0, 1] else (-1, 1)
                 x = max(q0x, q1x)
-                if qubits == [0, 1]: 
-                    y1, y2 = 1, -1
-                else: 
-                    y1, y2 = -1, 1
-            else:
+                q0, q1 = True, True
+            else:  
                 if qubits == [0]:
-                    x, y = q0x, 1
-                if qubits == [1]:
-                    x, y = q1x, -1
+                    x, y, q0 = q0x, 1, True
+                elif qubits == [1]:
+                    x, y, q1 = q1x, -1, True
 
-            gate = VGroup()
-            if category == 'single_qubit_gates': 
+            if category == 'single_qubit_gates':
+                init = Gates().single(name, x=x, y=y, params=params)
+                x += init.width/2
+                if len(params) == 3: 
+                    reduce = True
                 gate = Gates().single(name, x=x, y=y, params=params)
-                mobjects.append(gate)
-            if category == 'cx_like_gates':
-                if name.lower() == 'cx' or name.lower() == 'cnot':
+            elif category == 'cx_like_gates':
+                if name.lower() in ['cx', 'cnot']: 
+                    init = Gates().cx(x, y1, y2)
+                    x += init.width
                     gate = Gates().cx(x, y1, y2)
-                    mobjects.append(gate) 
-                if name.lower() == 'cy': 
-                    gate = Gates().cx(x, y1, y2)
-                    mobjects.append(gate)
-                if name.lower() == 'cz': 
+                elif name.lower() == 'cy': 
+                    init = Gates().cy(x, y1, y2)
+                    x += init.width/2
+                    gate = Gates().cy(x, y1, y2)
+                elif name.lower() == 'cz': 
+                    init = Gates().ctext(x, y1, y2)
+                    x += init.width/2
                     gate = Gates().ctext(x, y1, y2)
-                    mobjects.append(gate)
-            if category == 'cphase_gates': 
+                elif name.lower() == 'swap': 
+                    init = Gates().swap(x, y1, y2)
+                    x += init.width/2
+                    gate = Gates().swap(x, y1, y2)
+            elif category == 'cphase_gates':
+                init = Gates().ctext(x, y1, y2, params=[name, params])
+                x += init.width/2
                 gate = Gates().ctext(x, y1, y2, params=[name, params])
-                mobjects.append(gate)
-            if category == 'general_controlled_gates':
+            elif category == 'general_controlled_gates':
+                init = Gates().cgate(name, x, y1, y2, params=params)
+                x += init.width/2
                 gate = Gates().cgate(name, x, y1, y2, params=params)
-                mobjects.append(gate)
-            if category == 'multi_qubit_gates': 
-                gate = Gates().multi(name, x, y1, y2, 
-                                     params=params,idxs=qubits)
-                mobjects.append(gate) 
+            elif category == 'multi_qubit_gates':
+                init = Gates().multi(name, x, y1, y2, params=params, idxs=qubits)
+                x += init.width/2
+                gate = Gates().multi(name, x, y1, y2, params=params, idxs=qubits)
 
-            if len(qubits) > 1: 
-                q0x += gate.width + 0.8
-                q1x += gate.width + 0.8
-            elif qubits == [0]: q0x += gate.width + 0.8
-            elif qubits == [1]: q1x += gate.width + 0.8
+            circuit.append(gate)
+            if q0 and q1: 
+                max_gate_width = gate.width + gap 
+                q0x = q1x = max(q0x + max_gate_width, q1x + max_gate_width)
+            elif q0: 
+                q0x += gate.width + gap
+                if reduce: q0x -= gap/2
+            elif q1: 
+                q1x += gate.width + gap 
+                if reduce: q1x -= gap/2
 
-        q0wire = Line(start=np.array([-5, 1, 0]),
-                      end=np.array([max(q0x, q1x), 1, 0]),
-                      stroke_width = 8)
-        q1wire = Line(start=np.array([-5, -1, 0]), 
-                      end=np.array([max(q0x, q1x), -1, 0]), 
-                      stroke_width = 8)
+        return circuit
 
-        mobjects.append(q0wire)
-        mobjects.append(q1wire)
+    def build(self, qc, gap = 1): 
+        circuit_data = self.decompose(qc) 
+        num_qubits = qc.num_qubits
+        wire_y_pos = np.array(range(num_qubits-1, -num_qubits, -2))
+        
+        circuit, x = [], np.zeros(num_qubits)
+        for idx, elements in circuit_data.iterrows():
+            category, name = elements['category'], elements['names']
+            params, qubits = elements['params'], elements['idxs']
+            y_gate = wire_y_pos[qubits].tolist()
 
-        return mobjects
+            if category == 'single_qubit_gates': 
+                x_gate = x[qubits].tolist()[0]
+                y_gate = y_gate[0]
+                init = Gates().single(name, x=x_gate, y=y_gate, params=params)
+                if x[qubits] != 0: 
+                    x_gate += init.width/2
+                    x[qubits] += init.width/2
+                gate = Gates().single(name, x=x_gate, y=y_gate, params=params)
+                x[qubits] += gate.width/2 + gap
+                circuit.append(gate)
+                continue 
+
+            else: 
+                min_idx, max_idx = min(qubits), max(qubits)
+                between = x[min_idx:max_idx+1] 
+                x[min_idx:max_idx+1] = np.ones(len(between)) * max(between)
+                x_gate = max(x[qubits].tolist())
+                x_coords, zeros = x[qubits], np.zeros(len(qubits))
+
+            if category == 'cx_like_gates': 
+                if name.lower() in ['cx', 'cnot']: 
+                    init = Gates().cx(0, 0, 0)
+                    if not np.allclose(x_coords, zeros): 
+                        x_gate += init.width/2
+                        x[qubits] += init.width/2
+                    gate = Gates().cx(x_gate, y_gate[0], y_gate[1]) 
+                if name.lower() == 'cy': 
+                    init = Gates().cx(0, 0, 0)
+                    if not np.allclose(x_coords, zeros):
+                        x_gate += init.width/2
+                        x[qubits] += init.width/2
+                    gate = Gates().cy(x_gate, y_gate[0], y_gate[1])
+                if name.lower() == 'cz':
+                    init = Gates().ctext(0, 0, 0)
+                    if not np.allclose(x_coords, zeros):
+                        x_gate += init.width/2
+                        x[qubits] += init.width/2
+                    gate = Gates().ctext(x_gate, y_gate[0], y_gate[1])
+                if name.lower() == 'swap': 
+                    init = Gates().swap(0, 0, 0)
+                    if not np.allclose(x_coords, zeros): 
+                        x_gate += init.width/2
+                        x[qubits] += init.width/2
+                    gate = Gates().swap(x_gate, y_gate[0], y_gate[1])
+
+            elif category == 'cphase_gates': 
+                init = Gates().ctext(0, 0, 0, params=[name, params])
+                if not np.allclose(x_coords, zeros): 
+                    x_gate += init.width/2
+                    x[qubits] += init.width/2
+                gate = Gates().ctext(x_gate, y_gate[0], y_gate[1], 
+                                     params=[name, params])
+
+            elif category == 'general_controlled_gates':
+                init = Gates().cgate(name, 0, 0, 0, params=params)
+                if not np.allclose(x_coords, zeros): 
+                    x_gate += init.width/2
+                    x[qubits] += init.width/2
+                gate = Gates().cgate(name, x_gate, y_gate[0], y_gate[1],
+                                     params=params)
+
+            elif category == 'multi_qubit_gates': 
+                init = Gates().multi(name, 0, 0, 0, params=params, idxs=qubits)
+                if not np.allclose(x_coords, zeros): 
+                    x_gate += init.width/2
+                    x[qubits] += init.width/2
+                gate = Gates().multi(name, x_gate, y_gate[0], y_gate[1], 
+                                     params=params, idxs=qubits)
+
+            x[min_idx:max_idx+1] += gate.width/2 + gap
+            circuit.append(gate)
+
+        return circuit
 
 
-if __name__ == "__main__": 
-    qc = random_circuit(2, max_operands = 2, depth = 4, seed = 25)
+
+
+
+
+
+
+
+
+
+
+
+
+            
+
+
+
+
+if __name__ == "__main__":
+    qc = random_circuit(5, max_operands = 2, depth = 5, seed = 23)
+    qc.h(0)
     print(qc)
 
     config.pixel_height = 480  # Set pixel height for low resolution
