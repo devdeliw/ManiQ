@@ -56,10 +56,10 @@ class Gates(Scene):
         # control qubit
         dot = Dot(point = np.array([x1, y1, 0]), 
                   radius = 0.15, 
-                  color = BLUE_D)
+                  color = BLUE_E)
         # target qubit 
         circle = Circle(radius = 0.5, 
-                        color = BLUE_D, 
+                        color = BLUE_E, 
                         fill_opacity = 1).move_to([x1, y2, 0]) 
         plus = VGroup(
                 Line(start = np.array([x1- 0.3, y2, 0]), 
@@ -78,7 +78,7 @@ class Gates(Scene):
 
         line = Line(start = np.array([x1, y1, 0]), 
                     end = end, 
-                    color = BLUE_D,
+                    color = BLUE_E,
                     stroke_width = 5)
 
         gate = VGroup(dot, circle, line) 
@@ -110,15 +110,15 @@ class Gates(Scene):
         # control qubit 
         dot1 = Dot(point = np.array([x1, y1, 0]), 
                   radius = 0.15, 
-                  color = BLUE_B) 
+                  color = BLUE_C) 
         # target qubit
         dot2 = Dot(point = np.array([x1, y2, 0]),
                   radius = 0.15, 
-                  color = BLUE_B)
+                  color = BLUE_C)
         # line in between 
         line = Line(start = np.array([x1, y1, 0]), 
                     end = np.array([x1, y2, 0]), 
-                    color = BLUE_B)
+                    color = BLUE_C)
 
         if params: 
             y_param = min(y1,y2) + 1
@@ -133,7 +133,7 @@ class Gates(Scene):
                                      font_size= 40, 
                                      fill_color=WHITE, 
                                      fill_opacity=1).move_to(
-                                             [x1+1, y_param, 0])
+                                             [x1+0.5, y_param, 0])
             gate = VGroup(dot1, dot2, line, param_text)
         else: 
             gate = VGroup(dot1, dot2, line)
@@ -217,7 +217,15 @@ class Gates(Scene):
 
 class BuildCircuit(Scene):
     # build a visual manim circuit from a qiskit QuantumCircuit() object
-    def construct(self, qc, run_time=0.5):
+    def construct(self, run_time=0.5):
+        qc = QuantumCircuit(5)
+        qc.h(0)
+        qc.x(1)
+        qc.y(2)
+        qc.z(3) 
+        qc.cx(4, 2)
+        qc.swap(1, 4)
+        qc.rxx(0, 0, 4)
         mobjects = self.build(qc)
         
         circuit = VGroup(*mobjects)
@@ -240,7 +248,7 @@ class BuildCircuit(Scene):
         circuit_full.scale(scaling_factor)
 
         # Step 5: Animate the circuiti
-        self.play(Write(circuit_full), run_time=run_time)
+        self.add(circuit_full)
 
     def decompose(self, qc):
         # provided a qiskit QuantumCircuit() object
@@ -254,14 +262,17 @@ class BuildCircuit(Scene):
             for category, gates in quantum_gates.items():
                 for gate in gates:
                     if gate_name == gate['name']:
-                        return category, gate['latex']
+                        if 'color' in gate:
+                            return category, gate['latex'], gate['color']
+                        else: 
+                            return category, gate['latex'], 'MAROON_C'
 
-        categories, names, params, idxs = [], [], [], []
+        categories, names, params, colors, idxs = [], [], [], [], []
         for instruction in qc.data:
-            category, latex = categorize_gate(instruction.operation.name)
+            category, latex, color = categorize_gate(instruction.operation.name)
             categories.append(category)
-
             names.append(latex)
+            colors.append(color)
             params.append([i for i in instruction.operation.params if
                            isinstance(i, (float, np.floating))])
 
@@ -270,6 +281,7 @@ class BuildCircuit(Scene):
         circuit_data = pd.DataFrame({
             'category': categories,
             'names': names,
+            'colors': colors,
             'params': params,
             'idxs': idxs
         })
@@ -357,6 +369,7 @@ class BuildCircuit(Scene):
         for idx, elements in circuit_data.iterrows():
             category, name = elements['category'], elements['names']
             params, qubits = elements['params'], elements['idxs']
+            color = elements['colors']
             y_gate = wire_y_pos[qubits].tolist()
 
             if category == 'single_qubit_gates': 
@@ -366,7 +379,7 @@ class BuildCircuit(Scene):
                 if x[qubits] != 0: 
                     x_gate += init.width/2
                     x[qubits] += init.width/2
-                gate = Gates().single(name, x=x_gate, y=y_gate, params=params)
+                gate = Gates().single(name, x=x_gate, y=y_gate, color=color, params=params)
                 x[qubits] += gate.width/2 + gap
                 circuit.append(gate)
                 continue 
@@ -456,7 +469,7 @@ class BuildCircuit(Scene):
 
 
 if __name__ == "__main__":
-    qc = random_circuit(5, depth = 5, max_operands = 2)
+    qc = random_circuit(10, depth = 5, max_operands = 2)
     qc.rzz(0.4, 0, 3)
     qc.rxx(0.4, 4, 0)
     print(qc)

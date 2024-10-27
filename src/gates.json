@@ -2,7 +2,8 @@
   "single_qubit_gates": [
     {
       "name": "x",
-      "latex": "X"
+      "latex": "X", 
+      "color": "BLUE_E"
     },
     {
       "name": "y",
@@ -10,35 +11,43 @@
     },
     {
       "name": "z",
-      "latex": "Z"
+      "latex": "Z", 
+      "color": "BLUE_C"
     },
     {
       "name": "h",
-      "latex": "H"
+      "latex": "H", 
+      "color": "RED_C"
     },
     {
       "name" : "sdg", 
-      "latex" : "S^\\dagger"
+      "latex": "S^\\dagger", 
+      "color": "BLUE_C"
     },
     {
       "name": "s",
-      "latex": "S"
+      "latex": "S", 
+      "color": "BLUE_C"
     },
     {
       "name": "t",
-      "latex": "T"
+      "latex": "T", 
+      "color": "BLUE_C"
     },
     {
       "name" : "p", 
-      "latex" : "P" 
+      "latex": "P" , 
+      "color": "BLUE_C"
     },
     {
       "name" : "id",
-      "latex" : "I"
+      "latex": "I", 
+      "color": "BLUE_D"
     },
     {
       "name": "tdg",
-      "latex": "T^\\dagger"
+      "latex": "T^\\dagger",
+      "color": "BLUE_C"
     },
     {
       "name": "sx",
@@ -84,7 +93,8 @@
   "cx_like_gates": [
     {
       "name": "cx",
-      "latex": "CNOT"
+      "latex": "CNOT", 
+      "color": "BLUE_D"
     },
     {
       "name": "cy",
@@ -92,29 +102,35 @@
     },
     {
       "name": "cz",
-      "latex": "CZ"
+      "latex": "CZ", 
+      "color": "BLUE_C"
     },
     {
       "name": "swap", 
-      "latex": "SWAP"
+      "latex": "SWAP", 
+      "color": "BLUE_C"
     }
   ],
   "cphase_gates": [
     {
       "name": "cp",
-      "latex": "P"
+      "latex": "P",
+      "color": "BLUE_C"
     },
     {
       "name": "cphase",
-      "latex": "P"
+      "latex": "P", 
+      "color": "BLUE_C"
     },
     {
       "name": "cz",
-      "latex": "Z"
+      "latex": "Z", 
+      "color": "BLUE_C"
     },
     {
       "name": "rzz",
-      "latex": "ZZ"
+      "latex": "ZZ", 
+      "color": "BLUE_C"
     },
     {
       "name": "crz",
@@ -122,11 +138,13 @@
     },
     {
       "name": "cs",
-      "latex": "S"
+      "latex": "S", 
+      "color": "BLUE_C"
     },
     {
       "name": "ct",
-      "latex": "T"
+      "latex": "T", 
+      "color": "BLUE_C"
     },
     {
       "name": "cu1",
@@ -144,15 +162,18 @@
     },
     {
       "name": "ccx",
-      "latex": "Toffoli"
+      "latex": "Toffoli", 
+      "color": "BLUE_D"
     },
     {
       "name" : "ch", 
-      "latex" : "H"
+      "latex" : "H", 
+      "color": "RED_C"
     },
     {
       "name": "csdg", 
-      "latex": "S^\\dagger"
+      "latex": "S^\\dagger", 
+      "color": "BLUE_C"
     }, 
     {
       "name" : "csx", 
@@ -180,13 +201,15 @@
     },
     {
       "name": "cswap",
-      "latex": "Cswap"
+      "latex": "Cswap",
+      "color": "BLUE_C"
     }
   ],
   "multi_qubit_gates": [
     {
       "name": "iswap",
-      "latex": "\\text{iSWAP}"
+      "latex": "\\text{iSWAP}", 
+      "color": "BLUE_C"
     },
     { 
       "name" : "dcx", 
