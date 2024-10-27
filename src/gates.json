@@ -30,7 +30,7 @@
     },
     {
       "name" : "p", 
-      "latex" : "p" 
+      "latex" : "P" 
     },
     {
       "name" : "id",
@@ -93,51 +93,55 @@
     {
       "name": "cz",
       "latex": "CZ"
+    },
+    {
+      "name": "swap", 
+      "latex": "SWAP"
     }
   ],
   "cphase_gates": [
     {
       "name": "cp",
-      "latex": "CP"
+      "latex": "P"
     },
     {
       "name": "cphase",
-      "latex": "CPhase"
+      "latex": "P"
     },
     {
       "name": "cz",
-      "latex": "CZ"
+      "latex": "Z"
     },
     {
-      "name": "czz",
-      "latex": "CZZ"
+      "name": "rzz",
+      "latex": "ZZ"
     },
     {
       "name": "crz",
-      "latex": "CR_z"
+      "latex": "R_z"
     },
     {
       "name": "cs",
-      "latex": "CS"
+      "latex": "S"
     },
     {
       "name": "ct",
-      "latex": "CT"
+      "latex": "T"
     },
     {
       "name": "cu1",
-      "latex": "CU_1"
+      "latex": "U_1"
     },
     {
       "name": "cu3",
-      "latex": "CU_3"
-    },
-    {
-      "name": "cu",
-      "latex": "CU"
+      "latex": "U_3"
     }
   ],
   "general_controlled_gates": [
+    {
+      "name" : "cu", 
+      "latex" : "U" 
+    },
     {
       "name": "ccx",
       "latex": "Toffoli"
@@ -156,23 +160,23 @@
     },
     {
       "name": "ccz",
-      "latex": "CCZ"
+      "latex": "\\text{CCZ}"
     },
     {
       "name": "cxx",
-      "latex": "CXX"
+      "latex": "\\text{CXX}"
     },
     {
       "name": "crx",
-      "latex": "CR_x"
+      "latex": "R_x"
     },
     {
       "name": "cry",
-      "latex": "CR_y"
+      "latex": "R_y"
     },
     {
       "name": "cr",
-      "latex": "CR"
+      "latex": "R"
     },
     {
       "name": "cswap",
@@ -182,15 +186,11 @@
   "multi_qubit_gates": [
     {
       "name": "iswap",
-      "latex": "iSWAP"
-    },
-    {
-      "name": "swap",
-      "latex": "SWAP"
+      "latex": "\\text{iSWAP}"
     },
     { 
       "name" : "dcx", 
-      "latex" : "DCX"
+      "latex" : "\\text{DCX}"
     },
     {
       "name": "xx",
@@ -217,16 +217,12 @@
       "latex": "R_{YY}"
     },
     {
-      "name": "rzz",
-      "latex": "R_{ZZ}"
-    },
-    {
       "name": "rzx",
       "latex": "R_{ZX}"
     },
     {
       "name": "ecr",
-      "latex": "ECR"
+      "latex": "\\text{ECR}"
     },
     {
       "name": "xx_minus_yy",

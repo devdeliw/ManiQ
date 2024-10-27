@@ -106,7 +106,7 @@ class Gates(Scene):
         gate = VGroup(dot, target, line)
         return gate
     
-    def ctext(self, x1, y1, y2, params = None): 
+    def ctext(self, x1, y1, y2, params = None, param_location = None): 
         # control qubit 
         dot1 = Dot(point = np.array([x1, y1, 0]), 
                   radius = 0.15, 
@@ -121,14 +121,19 @@ class Gates(Scene):
                     color = BLUE_B)
 
         if params: 
+            y_param = min(y1,y2) + 1
             if params[1]: 
                 param_text = MathTex(rf"{params[0]} \; ({params[1][0]:.1f})",
-                                     font_size = 30).move_to(
-                                             [x1+0.6, min(y1,y2)+abs(y2-y1)/2, 0])
+                                     font_size = 40,
+                                     fill_color = WHITE,
+                                     fill_opacity=1).move_to(
+                                             [x1+1, y_param, 0])
             else: 
-                param_text = MathTex(rf"{params[0]}", font_size
-                                     = 30).move_to(
-                                             [x1+0.4, min(y1,y2)+abs(y2-y1)/2, 0])
+                param_text = MathTex(rf"{params[0]}", 
+                                     font_size= 40, 
+                                     fill_color=WHITE, 
+                                     fill_opacity=1).move_to(
+                                             [x1+1, y_param, 0])
             gate = VGroup(dot1, dot2, line, param_text)
         else: 
             gate = VGroup(dot1, dot2, line)
@@ -378,40 +383,44 @@ class BuildCircuit(Scene):
                     init = Gates().cx(0, 0, 0)
                     if not np.allclose(x_coords, zeros): 
                         x_gate += init.width/2
-                        x[qubits] += init.width/2
+                        x[min_idx:max_idx+1] += init.width/2
                     gate = Gates().cx(x_gate, y_gate[0], y_gate[1]) 
                 if name.lower() == 'cy': 
                     init = Gates().cx(0, 0, 0)
                     if not np.allclose(x_coords, zeros):
                         x_gate += init.width/2
-                        x[qubits] += init.width/2
+                        x[min_idx:max_idx+1] += init.width/2
                     gate = Gates().cy(x_gate, y_gate[0], y_gate[1])
                 if name.lower() == 'cz':
                     init = Gates().ctext(0, 0, 0)
                     if not np.allclose(x_coords, zeros):
                         x_gate += init.width/2
-                        x[qubits] += init.width/2
+                        x[min_idx:max_idx+1] += init.width/2
                     gate = Gates().ctext(x_gate, y_gate[0], y_gate[1])
                 if name.lower() == 'swap': 
                     init = Gates().swap(0, 0, 0)
                     if not np.allclose(x_coords, zeros): 
                         x_gate += init.width/2
-                        x[qubits] += init.width/2
+                        x[min_idx:max_idx+1] += init.width/2
                     gate = Gates().swap(x_gate, y_gate[0], y_gate[1])
 
             elif category == 'cphase_gates': 
                 init = Gates().ctext(0, 0, 0, params=[name, params])
+                param_location = False
+                if abs(qubits[0]-qubits[1]) % 2 == 0: 
+                    param_location = True
                 if not np.allclose(x_coords, zeros): 
                     x_gate += init.width/2
-                    x[qubits] += init.width/2
+                    x[min_idx:max_idx+1] += init.width/2
                 gate = Gates().ctext(x_gate, y_gate[0], y_gate[1], 
-                                     params=[name, params])
+                                     params=[name, params], 
+                                     param_location = param_location)
 
             elif category == 'general_controlled_gates':
                 init = Gates().cgate(name, 0, 0, 0, params=params)
                 if not np.allclose(x_coords, zeros): 
                     x_gate += init.width/2
-                    x[qubits] += init.width/2
+                    x[min_idx:max_idx+1] += init.width/2
                 gate = Gates().cgate(name, x_gate, y_gate[0], y_gate[1],
                                      params=params)
 
@@ -419,7 +428,7 @@ class BuildCircuit(Scene):
                 init = Gates().multi(name, 0, 0, 0, params=params, idxs=qubits)
                 if not np.allclose(x_coords, zeros): 
                     x_gate += init.width/2
-                    x[qubits] += init.width/2
+                    x[min_idx:max_idx+1] += init.width/2
                 gate = Gates().multi(name, x_gate, y_gate[0], y_gate[1], 
                                      params=params, idxs=qubits)
 
@@ -447,12 +456,13 @@ class BuildCircuit(Scene):
 
 
 if __name__ == "__main__":
-    qc = random_circuit(5, max_operands = 2, depth = 5, seed = 23)
-    qc.h(0)
+    qc = random_circuit(5, depth = 5, max_operands = 2)
+    qc.rzz(0.4, 0, 3)
+    qc.rxx(0.4, 4, 0)
     print(qc)
 
-    config.pixel_height = 480  # Set pixel height for low resolution
-    config.pixel_width = 854    # Set pixel width for low resolution
+    #config.pixel_height = 480  # Set pixel height for low resolution
+    #config.pixel_width = 854    # Set pixel width for low resolution
 
     build_circuit_scene = BuildCircuit() 
     build_circuit_scene.construct(qc)
