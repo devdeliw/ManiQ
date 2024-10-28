@@ -41,12 +41,12 @@ class Gates(Scene):
                   color=GRAY_D).move_to([x, y1-0.1, 0])
         semicirc = Arc(fill_opacity=0,
                        angle=PI, 
-                       stroke_width=5, 
+                       stroke_width=2, 
                        color=GRAY_D).scale(0.35).move_to(np.add(
                            dot.get_center(), np.array([0, 0.1, 0])))
         line = Line(dot.get_center(), 
                     np.array([x + 0.3, y1 + 0.3, 0]),
-                    stroke_width=5,
+                    stroke_width=2,
                     color=GRAY_D)
         square = Square(side_length = 1,
                         color=YELLOW_A,
@@ -56,11 +56,11 @@ class Gates(Scene):
 
         line_measure_1 = Line(np.array([x-0.07, y1, 0]),
                               np.array([x-0.07, y2+0.4, 0]), 
-                              stroke_width = 5, 
+                              stroke_width = 2, 
                               color = YELLOW_A)
         line_measure_2 = Line(np.array([x+0.07, y1, 0]), 
                               np.array([x+0.07, y2+0.4, 0]), 
-                              stroke_width =5, 
+                              stroke_width=2, 
                               color = YELLOW_A)
         measure_tip = Triangle(color = YELLOW_A, 
                                fill_color = YELLOW_A, 
@@ -91,7 +91,7 @@ class Gates(Scene):
     def cx(self, x1, y1, y2):
         # control qubit
         dot = Dot(point = np.array([x1, y1, 0]), 
-                  radius = 0.15, 
+                  radius = 0.2, 
                   color = BLUE_E)
         # target qubit 
         circle = Circle(radius = 0.5, 
@@ -123,7 +123,7 @@ class Gates(Scene):
     def cy(self, x1, y1, y2): 
         # control qubit
         dot = Dot(point = np.array([x1, y1, 0]),
-                  radius = 0.15,
+                  radius = 0.2,
                   color = MAROON_C)
         # target qubit
         target = self.single("Y", x1, y2, color=MAROON_C)
@@ -145,11 +145,11 @@ class Gates(Scene):
     def ctext(self, x1, y1, y2, params = None, param_location = None): 
         # control qubit 
         dot1 = Dot(point = np.array([x1, y1, 0]), 
-                  radius = 0.15, 
+                  radius = 0.2, 
                   color = BLUE_C) 
         # target qubit
         dot2 = Dot(point = np.array([x1, y2, 0]),
-                  radius = 0.15, 
+                  radius = 0.2, 
                   color = BLUE_C)
         # line in between 
         line = Line(start = np.array([x1, y1, 0]), 
@@ -191,7 +191,7 @@ class Gates(Scene):
     def cgate(self, name, x1, y1, y2, y3 = None, color = MAROON_D, params = None): 
         # control qubit
         dot = Dot(point=np.array([x1, y1, 0]),
-                  radius=0.15, color=color)
+                  radius=0.2, color=color)
         label = MathTex(rf"{name}", font_size = 80)
 
         if params: 
@@ -252,9 +252,9 @@ class BuildCircuit(Scene):
     # build a visual manim circuit from a qiskit QuantumCircuit() object
     def construct(self, run_time=0.5):
 
-        qc = random_circuit(5, max_operands = 2, depth = 3)
+        qc = random_circuit(5, max_operands = 2, depth = 8)
         qc.measure_all()
-
+        print(qc)
 
         mobjects = self.build(qc)
         circuit = VGroup(*mobjects)
@@ -268,7 +268,7 @@ class BuildCircuit(Scene):
                                 [circuit.get_center()[0]-circuit.width/2-0.3, c_wire_pos+0.03, 0]), 
                             end=np.array(
                                 [circuit.get_center()[0]+circuit.width/2+0.3, c_wire_pos+0.03, 0]), 
-                            stroke_width=3, 
+                            stroke_width=2, 
                             color=YELLOW_A))
             cwires.add(Line(start=np.array(
                                 [circuit.get_center()[0]-circuit.width/2-0.3,
@@ -276,7 +276,7 @@ class BuildCircuit(Scene):
                             end=np.array(
                                 [circuit.get_center()[0]+circuit.width/2+0.3,
                                  c_wire_pos-0.06, 0]),
-                            stroke_width=3, 
+                            stroke_width=2, 
                             color=YELLOW_A))
             cwires.add(Line(start=np.array(
                                 [circuit.get_center()[0]-circuit.width/2-0.05,
@@ -284,7 +284,7 @@ class BuildCircuit(Scene):
                             end=np.array(
                                 [circuit.get_center()[0]-circuit.width/2+0.05,
                                  c_wire_pos+0.1, 0]), 
-                            stroke_width=5, 
+                            stroke_width=2, 
                             color=YELLOW_A))
             cwires.add(MathTex(rf"C", 
                                font_size=55).move_to(
@@ -312,8 +312,9 @@ class BuildCircuit(Scene):
                              config.frame_height/circuit_full.height)
         circuit_full.scale(scaling_factor)
 
-        # Step 5: Animate the circuiti
-        self.add(circuit_full)
+       
+        self.play(Write(circuit_full), run_time = 10)
+        self.wait()
 
     def decompose(self, qc):
         # provided a qiskit QuantumCircuit() object
@@ -521,11 +522,20 @@ class BuildCircuit(Scene):
 
             elif category == 'multi_qubit_gates': 
                 init = Gates().multi(name, 0, 0, 0, params=params, idxs=qubits)
+
+                def rank_indices(array):
+                    sorted_indices = sorted(range(len(array)), key=lambda x: array[x])
+                    rank = [0] * len(array)
+                    for rank_index, original_index in enumerate(sorted_indices):
+                        rank[original_index] = rank_index
+                    return rank
+
                 if not np.allclose(x_coords, zeros): 
                     x_gate += init.width/2
                     x[min_idx:max_idx+1] += init.width/2
+                ordering = rank_indices(qubits)
                 gate = Gates().multi(name, x_gate, y_gate[0], y_gate[1], 
-                                     params=params, idxs=qubits)
+                                     params=params, idxs=ordering)
 
             x[min_idx:max_idx+1] += gate.width/2 + gap
             circuit.append(gate)
