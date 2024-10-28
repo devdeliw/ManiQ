@@ -109,6 +109,14 @@
       "name": "swap", 
       "latex": "SWAP", 
       "color": "BLUE_C"
+    },
+    {
+      "name": "measure", 
+      "latex": "measure"
+    },
+    {
+      "name": "barrier",
+      "latex": "barrier"
     }
   ],
   "cphase_gates": [
