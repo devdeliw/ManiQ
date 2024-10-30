@@ -42,7 +42,7 @@
     {
       "name" : "id",
       "latex": "I", 
-      "color": "BLUE_D"
+      "color": "BLUE_E"
     },
     {
       "name": "tdg",
@@ -94,7 +94,7 @@
     {
       "name": "cx",
       "latex": "CNOT", 
-      "color": "BLUE_D"
+      "color": "BLUE_E"
     },
     {
       "name": "cy",
@@ -169,11 +169,6 @@
       "latex" : "U" 
     },
     {
-      "name": "ccx",
-      "latex": "Toffoli", 
-      "color": "BLUE_D"
-    },
-    {
       "name" : "ch", 
       "latex" : "H", 
       "color": "RED_C"
@@ -188,14 +183,6 @@
       "latex": "\\sqrt{X}"
     },
     {
-      "name": "ccz",
-      "latex": "\\text{CCZ}"
-    },
-    {
-      "name": "cxx",
-      "latex": "\\text{CXX}"
-    },
-    {
       "name": "crx",
       "latex": "R_x"
     },
@@ -206,11 +193,6 @@
     {
       "name": "cr",
       "latex": "R"
-    },
-    {
-      "name": "cswap",
-      "latex": "Cswap",
-      "color": "BLUE_C"
     }
   ],
   "multi_qubit_gates": [
@@ -221,7 +203,8 @@
     },
     { 
       "name" : "dcx", 
-      "latex" : "\\text{DCX}"
+      "latex" : "\\text{DCX}",
+      "color": "BLUE_E"
     },
     {
       "name": "xx",
@@ -262,6 +245,36 @@
     {
       "name": "xx_plus_yy", 
       "latex": "XX + YY"
+    }, 
+    {
+      "name": "rccx", 
+      "latex": "\\text{Rccx}"
+    }, 
+    {
+      "name": "rcccx", 
+      "latex": "\\text{Rcccx}"
+    }
+  ],
+  "multi_controlled_gates": [
+    {
+      "name": "ccx",
+     "latex": "ccx"
+    }, 
+    {
+      "name": "ccy", 
+      "latex": "ccy"
+    }, 
+    {
+      "name": "ccz", 
+      "latex": "ccz"
+    },
+    {
+      "name": "c3sx", 
+      "latex": "\\sqrt{X}"
+    }, 
+    {
+      "name": "cswap", 
+      "latex": "cswap"
     }
   ]
 }
