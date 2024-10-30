@@ -163,9 +163,9 @@ class Gates(Scene):
 
     def swap(self, x1, y1, y2): 
         cross1 = Cross(stroke_color = BLUE_E, 
-                       scale_factor = 0.3, stroke_width = 4).move_to([x1, y1, 0])
+                       scale_factor = 0.4, stroke_width = 4).move_to([x1, y1, 0])
         cross2 = Cross(stroke_color = BLUE_E,
-                       scale_factor = 0.3, stroke_width = 4).move_to([x1, y2, 0])
+                       scale_factor = 0.4, stroke_width = 4).move_to([x1, y2, 0])
 
         line = Line(start = np.array([x1,y1,0]),
                     end = np.array([x1,y2,0]), 
@@ -175,7 +175,7 @@ class Gates(Scene):
         return gate
 
     # general controlled unitary gate
-    def cgate(self, name, x1, y1, y2, y3 = None, color = MAROON_D, params = None): 
+    def cgate(self, name, x1, y1, y2, y3 = None, color = MAROON_C, params = None): 
         # control qubit
         dot = Dot(point=np.array([x1, y1, 0]),
                   radius=0.3, color=color)
@@ -200,14 +200,14 @@ class Gates(Scene):
     def fredkin(self, x1, y1, y2, y3): 
         dot = Dot(point=np.array([x1, y1, 0]), 
                   radius=0.3, 
-                  color=BLUE_D)
-        cross1 = Cross(stroke_color = BLUE_D,
-                       scale_factor = 0.25, stroke_width = 4).move_to([x1, y2, 0])
-        cross2 = Cross(stroke_color = BLUE_D,
-                       scale_factor = 0.25, stroke_width = 4).move_to([x1, y3, 0])
+                  color=BLUE_E)
+        cross1 = Cross(stroke_color = BLUE_E,
+                       scale_factor = 0.4, stroke_width = 4).move_to([x1, y2, 0])
+        cross2 = Cross(stroke_color = BLUE_E,
+                       scale_factor = 0.4, stroke_width = 4).move_to([x1, y3, 0])
         line = Line(start = np.array([x1,min(y1,y2,y3),0]),
                     end = np.array([x1,max(y1,y2,y3),0]),
-                    color = BLUE_D)
+                    color = BLUE_E)
 
         gate = VGroup(dot, cross1, cross2, line)
         return gate 
@@ -263,18 +263,18 @@ class Gates(Scene):
     def ccgate(self, name, x1, y1, y2, y3, params=None): 
         dot1 = Dot(point=np.array([x1, y1, 0]), 
                    radius=0.3, 
-                   color=MAROON_D)
+                   color=MAROON_C)
         dot2 = Dot(point=np.array([x1, y2, 0]), 
                    radius=0.3,
-                   color=MAROON_D)
+                   color=MAROON_C)
         target = self.single(name, x1, y3, 
                              params=params,
-                             color=MAROON_D)
+                             color=MAROON_C)
 
         line = Line(start=np.array([x1, min(y1,y2,y3), 0]), 
                     end=np.array([x1, max(y1,y2,y3), 0]),
                     stroke_width=5,
-                    color=MAROON_D)
+                    color=MAROON_C)
 
         gate = VGroup(line, dot1, dot2, target)
 
@@ -283,16 +283,16 @@ class Gates(Scene):
     def cccgate(self, name, x1, y1, y2, y3, y4, params=None): 
         dot1 = Dot(point=np.array([x1, y1, 0]),
                    radius=0.3,
-                   color=MAROON_D)
+                   color=MAROON_C)
         dot2 = Dot(point=np.array([x1, y2, 0]),
                    radius=0.3,
-                   color=MAROON_D)
+                   color=MAROON_C)
         dot3 = Dot(point=np.array([x1, y3, 0]),
                    radius=0.3, 
-                   color=MAROON_D)
+                   color=MAROON_C)
         target = self.single(name, x1, y4,
                              params=params,
-                             color=MAROON_D)
+                             color=MAROON_C)
 
         line = Line(start=np.array([x1, min(y1,y2,y3,y4), 0]),
                     end=np.array([x1, max(y1,y2,y3,y4), 0]),
@@ -357,7 +357,7 @@ class BuildCircuit(Scene):
     # build a visual manim circuit from a qiskit QuantumCircuit() object
     def construct(self, run_time=0.5):
 
-        qc = random_circuit(5, max_operands = 4, depth = 10)
+        qc = random_circuit(10, max_operands = 4, depth = 5)
         qc.cswap(0, 1, 2)
         qc.cswap(2, 1, 0)
         qc.cswap(1, 0, 2)
