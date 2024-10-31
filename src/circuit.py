@@ -216,7 +216,7 @@ class Gates(Scene):
         dot1 = Dot(point = np.array([x1, y1, 0]),
                   radius = 0.3,
                   color = BLUE_E)
-        dot2 = Dot(point=np.array([x1, y1, 0]), 
+        dot2 = Dot(point=np.array([x1, y2, 0]), 
                    radius=0.3, 
                    color=BLUE_E)
         circle = Circle(radius = 0.5,
@@ -337,37 +337,76 @@ class Gates(Scene):
 
         return gate
 
-        
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
 
 class BuildCircuit(Scene):
     # build a visual manim circuit from a qiskit QuantumCircuit() object
-    def construct(self, run_time=0.5):
-
-        qc = random_circuit(10, max_operands = 4, depth = 5)
-        qc.cswap(0, 1, 2)
-        qc.cswap(2, 1, 0)
-        qc.cswap(1, 0, 2)
-        qc.measure_all()
-        print(qc)
-
+    def construct(self, qc, run_time=3):
         mobjects = self.build(qc)
-        circuit = VGroup(*mobjects)
+        wire_pos = list(range(-qc.num_qubits+1, qc.num_qubits, 2))
+        
+        def group_by_column(objects):
+            gate_count = 0
+            columns = []
+            processed = set()
+            while gate_count < len(objects):
+                start_object = objects[gate_count]
+                start_height = start_object.height
+                start_y = start_object.get_y()
 
-        wire_pos = list(range(-qc.num_qubits+1, qc.num_qubits, 2)) 
+                initial_wires = [
+                    wire for wire in wire_pos
+                    if start_y-start_height/2 <= wire <= start_y+start_height/2
+                ]
+
+                filtered_objects = []
+                for obj in objects[gate_count+1:]:
+                    intersecting_wires = [
+                        wire for wire in wire_pos
+                        if obj.get_y()-obj.height/2 <= wire <= obj.get_y()+obj.height/2
+                    ]
+                    if all(obj not in col for col in columns):
+                        if abs(obj.get_x() - start_object.get_x()) <= 2:
+                            if not any(val in initial_wires for val in intersecting_wires):
+                                if obj not in filtered_objects: 
+                                    filtered_objects.append(obj)
+
+                individual_column = [start_object]
+                intersecting_wires = [
+                    num for num in wire_pos if start_y-start_height/2 <= num <= start_y+start_height/2
+                ]
+
+                stored_y_positions = set(intersecting_wires)
+
+                for obj in filtered_objects:
+                    obj_y = obj.get_y()
+                    obj_height = obj.height
+
+                    current_intersecting_wires = [
+                        num for num in wire_pos if obj_y-obj_height <= num <= obj_y+obj_height
+                    ]
+                    if not any(y_pos in stored_y_positions for y_pos in current_intersecting_wires):
+                        individual_column.append(obj)
+                        stored_y_positions.update(current_intersecting_wires)
+                        gate_count+=1
+
+                columns.append(individual_column)
+                gate_count+=1
+
+            return columns
+        
+
+        def align_by_column(columns):
+            final_mobjects = []
+            for col in columns:
+                midpoint = max(mobject.get_x() for mobject in col)
+                for mobject in col:
+                    final_mobjects.append(mobject.move_to([midpoint, mobject.get_y(), 0]))
+            return final_mobjects
+
+
+        final_mobjects = align_by_column(group_by_column(mobjects))
+        circuit = VGroup(*final_mobjects)
+
         cwires = VGroup()
         if qc.num_clbits != 0: 
             min_qwire = min(wire_pos)
@@ -402,8 +441,6 @@ class BuildCircuit(Scene):
                                font_size=35).move_to(
                                    [circuit.get_center()[0]-circuit.width/2-0.15, 
                                     c_wire_pos+0.25, 0]))
-
-
         qwires = VGroup()
         idx = qc.num_qubits
         for wire in wire_pos: 
@@ -419,10 +456,9 @@ class BuildCircuit(Scene):
         scaling_factor = min(config.frame_width/circuit_full.width,
                              config.frame_height/circuit_full.height)
         circuit_full.scale(scaling_factor)
-
-       
-        self.play(Write(circuit_full), run_time = 1)
-        self.wait()
+ 
+        self.play(Write(circuit_full), run_time = run_time)
+        #self.wait()
 
     def decompose(self, qc):
         # provided a qiskit QuantumCircuit() object
@@ -463,7 +499,6 @@ class BuildCircuit(Scene):
         })
 
         return circuit_data
-
 
     def build_flat(self, qc, gap=0.8):
         # for two qubit circuits
@@ -706,14 +741,9 @@ class BuildCircuit(Scene):
 
 
 if __name__ == "__main__":
-    qc = random_circuit(5, depth = 1, max_operands = 2)
-    qc.rzz(0.4, 0, 3)
-    qc.rxx(0.4, 4, 0)
+    qc = random_circuit(3, depth = 10)
+    qc.measure_all()
     print(qc)
-
-    #config.pixel_height = 480  # Set pixel height for low resolution
-    #config.pixel_width = 854    # Set pixel width for low resolution
-
     build_circuit_scene = BuildCircuit() 
     build_circuit_scene.construct(qc)
 
