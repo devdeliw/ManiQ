@@ -341,6 +341,30 @@ class Gates(Scene):
 class BuildCircuit(Scene):
     # build a visual manim circuit from a qiskit QuantumCircuit() object
     def construct(self, qc, run_time=3):
+
+        def reorder_instructions(qc):
+            qubit_times = {i: 0 for i in range(qc.num_qubits)}
+            ordered_instructions = []
+
+            for instruction in qc.data:
+                qubits = [qc.find_bit(qubit).index for qubit in instruction.qubits]
+                start_time = max(qubit_times[q] for q in qubits)
+                ordered_instructions.append((start_time, instruction))
+                
+                min_qubit, max_qubit = min(qubits), max(qubits)
+                for q in range(min_qubit, max_qubit+1):
+                    qubit_times[q] = start_time + 1
+
+            ordered_instructions.sort(key=lambda x: x[0])
+
+            new_qc = QuantumCircuit(qc.num_qubits)
+            new_qc.add_register(*qc.cregs)
+            for _, inst in ordered_instructions:
+                new_qc.append(inst.operation, inst.qubits, inst.clbits)
+            
+            return new_qc
+
+        qc = reorder_instructions(qc)
         mobjects = self.build(qc)
         wire_pos = list(range(-qc.num_qubits+1, qc.num_qubits, 2))
         
@@ -376,7 +400,6 @@ class BuildCircuit(Scene):
                 ]
 
                 stored_y_positions = set(intersecting_wires)
-
                 for obj in filtered_objects:
                     obj_y = obj.get_y()
                     obj_height = obj.height
@@ -395,12 +418,15 @@ class BuildCircuit(Scene):
             return columns
         
 
-        def align_by_column(columns):
+        def align_by_column(columns, pad = 0.08):
             final_mobjects = []
+            start = 0
             for col in columns:
-                midpoint = max(mobject.get_x() for mobject in col)
+                midpoint = max(mobject.get_x() for mobject in col) + start
                 for mobject in col:
-                    final_mobjects.append(mobject.move_to([midpoint, mobject.get_y(), 0]))
+                    final_mobjects.append(mobject.move_to([midpoint+pad, mobject.get_y(), 0]))
+                start+=pad
+
             return final_mobjects
 
 
@@ -742,7 +768,6 @@ class BuildCircuit(Scene):
 
 if __name__ == "__main__":
     qc = random_circuit(3, depth = 10)
-    qc.measure_all()
     print(qc)
     build_circuit_scene = BuildCircuit() 
     build_circuit_scene.construct(qc)
