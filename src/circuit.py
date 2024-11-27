@@ -10,330 +10,364 @@ import json
 
 class Gates(Scene):
     def construct(self):
-
         ctext = self.ccz(0, 3, -3, 0)
         self.add(ctext)
 
-    # default single qubit gates
-    def single(self, name, x, y, color = MAROON_D, params=[]):
+    def single(self, name, x, y, color=MAROON_D, params=None):
+        # -- default single qubit gates
         label = MathTex(rf"{name}", font_size=55)
         if params:
             param_str = ", ".join([f"{param:.2f}" for param in params])
             label2 = MathTex(rf"{param_str}", font_size=30).next_to(label, DOWN * 0.1)
-            label.shift(UP * 0.1)  
+            label.shift(UP * 0.1)
+            label_group = VGroup(label, label2)
         else:
-            label2 = MathTex(rf"0.00", font_size=30).set_opacity(0)  
+            label_group = VGroup(label)
 
-        label_group = VGroup(label, label2)
-        border = Rectangle(width=label_group.width+0.4, height=1,
-                           fill_color=color, fill_opacity=1, 
-                           color=color).move_to([x, y, 0])
+        border = Rectangle(
+            width=max(1, label_group.width + 0.4), 
+            height=1,
+            fill_color=color, 
+            fill_opacity=1,
+            color=color
+        ).move_to([x, y, 0])
+
         label_group.move_to(border.get_center())
         gate = VGroup(border, label_group).move_to([x, y, 0])
-
         return gate
 
-    def measure(self, x, y1, y2): 
-        # measurement qubit
-        dot = Dot(radius=0.05,
-                  color=GRAY_D).move_to([x, y1-0.1, 0])
-        semicirc = Arc(fill_opacity=0,
-                       angle=PI, 
-                       stroke_width=2, 
-                       color=GRAY_D).scale(0.35).move_to(np.add(
-                           dot.get_center(), np.array([0, 0.1, 0])))
-        line = Line(dot.get_center(), 
-                    np.array([x + 0.3, y1 + 0.3, 0]),
-                    stroke_width=2,
-                    color=GRAY_D)
-        square = Square(side_length = 1,
-                        color=YELLOW_A,
-                        fill_color=YELLOW_A,
-                        fill_opacity=1).move_to([x, y1, 0])
+    def measure(self, x, y1, y2):
+        # -- measurement gate 
+        ## -- measurement qubit
+        dot = Dot(radius=0.05, color=GRAY_D).move_to([x, y1 - 0.1, 0])
+        semicirc = Arc(
+            fill_opacity=0, angle=PI, stroke_width=2, color=GRAY_D
+        ).scale(0.35).move_to(dot.get_center() + np.array([0, 0.1, 0]))
+        line = Line(
+            dot.get_center(), np.array([x + 0.3, y1 + 0.3, 0]),
+            stroke_width=2, color=GRAY_D
+        )
+        square = Square(
+            side_length=1, color=YELLOW_A, fill_color=YELLOW_A,
+            fill_opacity=1
+        ).move_to([x, y1, 0])
         group = VGroup(square, dot, line, semicirc)
 
-        line_measure_1 = Line(np.array([x-0.07, y1, 0]),
-                              np.array([x-0.07, y2+0.4, 0]), 
-                              stroke_width = 2, 
-                              color = YELLOW_A)
-        line_measure_2 = Line(np.array([x+0.07, y1, 0]), 
-                              np.array([x+0.07, y2+0.4, 0]), 
-                              stroke_width=2, 
-                              color = YELLOW_A)
-        measure_tip = Triangle(color = YELLOW_A, 
-                               fill_color = YELLOW_A, 
-                               fill_opacity
-                               = 1).scale(0.3).rotate(60*DEGREES).move_to([x,
-                                                                           y2+0.4, 0])
+        ## -- measurement lines to classical register
+        line_measure_1 = Line(
+            np.array([x - 0.07, y1, 0]), np.array([x - 0.07, y2 + 0.4, 0]),
+            stroke_width=2, color=YELLOW_A
+        )
+        line_measure_2 = Line(
+            np.array([x + 0.07, y1, 0]), np.array([x + 0.07, y2 + 0.4, 0]),
+            stroke_width=2, color=YELLOW_A
+        )
+        measure_tip = Triangle(
+            color=YELLOW_A, fill_color=YELLOW_A, fill_opacity=1
+        ).scale(0.3).rotate(60 * DEGREES).move_to([x, y2 + 0.4, 0])
+
         gate = VGroup(line_measure_1, line_measure_2, measure_tip, group)
+
         return gate
 
-    def barrier(self, x, y1, y2): 
-        # aesthetic barrier 
-        rect = Rectangle(width=0.5, 
-                         height=abs(y2-y1)+1,
-                         fill_color=GRAY_B,
-                         fill_opacity=0.8,
-                         stroke_width=0).move_to(
-                                 [x,min(y1,y2)+abs(y1-y2)/2, 0])
-        min_y, max_y = min(y1,y2), max(y1,y2)
-        dotted_line = DashedLine(start=np.array([x, min_y-0.5, 0]), 
-                                 end=np.array([x, max_y+0.5, 0]),
-                                 color=GRAY_E,
-                                 stroke_width=1.5)
+    def barrier(self, x, y1, y2):
+        # -- simple aesthetic barrier 
+        rect = Rectangle(
+            width=0.5, 
+            height=np.abs(y2 - y1) + 1,
+            fill_color=GRAY_B, 
+            fill_opacity=0.8, 
+            stroke_width=0
+        ).move_to([x, np.min(y1, y2) + np.abs(y1 - y2) / 2, 0])
+
+        dotted_line = DashedLine(
+            start=np.array([x, min(y1, y2) - 0.5, 0]),
+            end=np.array([x, max(y1, y2) + 0.5, 0]),
+            color=GRAY_E, stroke_width=1.5
+        )
+
         barrier = VGroup(rect, dotted_line)
+
         return barrier
 
-    # controlled pauli gates
-    # each has a different design 
+    # --  controlled pauli gates
     def cx(self, x1, y1, y2):
-        # control qubit
-        dot = Dot(point = np.array([x1, y1, 0]), 
-                  radius = 0.3, 
-                  color = BLUE_E)
-        # target qubit 
-        circle = Circle(radius = 0.5, 
-                        color = BLUE_E, 
-                        fill_opacity = 1).move_to([x1, y2, 0]) 
+        # -- CNOT gate 
+
+        ## --  control qubit
+        dot = Dot(point=np.array([x1, y1, 0]), radius=0.3, color=BLUE_E)
+
+        ## -- target qubit
+        circle = Circle(
+            radius=0.5, color=BLUE_E, fill_opacity=1
+        ).move_to([x1, y2, 0])
         plus = VGroup(
-                Line(start = np.array([x1- 0.3, y2, 0]), 
-                     end = np.array([x1+ 0.3, y2, 0]),
-                     stroke_width = 2), 
-                Line(start = np.array([x1, y2 - 0.3, 0]),
-                     end = np.array([x1, y2 + 0.3, 0]),
-                     stroke_width = 2))
+            Line(
+                start=np.array([x1 - 0.3, y2, 0]), 
+                end=np.array([x1 + 0.3, y2, 0]),
+                stroke_width=2
+            ),
+            Line(
+                start=np.array([x1, y2 - 0.3, 0]), 
+                end=np.array([x1, y2 + 0.3, 0]),
+                stroke_width=2
+            )
+        )
         circle = VGroup(circle, plus)
 
-        line = Line(start = np.array([x1, min(y1,y2), 0]), 
-                    end = np.array([x1, max(y1, y2), 0]), 
-                    color = BLUE_E,
-                    stroke_width = 5)
+        ## -- line connecting control & target qubits  
+        line = Line(
+            start=np.array([x1, min(y1, y2), 0]), end=np.array([x1, max(y1, y2), 0]),
+            color=BLUE_E, stroke_width=5
+        )
 
-        gate = VGroup(line, dot, circle) 
+        gate = VGroup(line, dot, circle)
+
         return gate
 
-    def cy(self, x1, y1, y2): 
-        # control qubit
-        dot = Dot(point=np.array([x1, y1, 0]),
-                  radius = 0.3,
-                  color = MAROON_C)
-        # target qubit
+    def cy(self, x1, y1, y2):
+        # -- CY gate
+
+        ## -- control qubit  
+        dot = Dot(point=np.array([x1, y1, 0]), radius=0.3, color=MAROON_C)
+
+        ## -- target qubit
         target = self.single("Y", x1, y2, color=MAROON_C)
 
-        line = Line(start = np.array([x1, min(y1, y2), 0]),
-                    end = np.array([x1, max(y1, y2), 0]),
-                    color = MAROON_C,
-                    stroke_width = 5)
+        ## -- line connecting control & target qubits 
+        line = Line(
+            start=np.array([x1, min(y1, y2), 0]), end=np.array([x1, max(y1, y2), 0]),
+            color=MAROON_C, stroke_width=5
+        )
 
         gate = VGroup(line, dot, target)
+
         return gate
-    
-    def ctext(self, x1, y1, y2, params = None, param_location = None): 
-        # control qubit 
-        dot1 = Dot(point = np.array([x1, y1, 0]), 
-                  radius = 0.3, 
-                  color = BLUE_C) 
-        # target qubit
-        dot2 = Dot(point = np.array([x1, y2, 0]),
-                  radius = 0.3, 
-                  color = BLUE_C)
-        # line in between 
-        line = Line(start = np.array([x1, y1, 0]), 
-                    end = np.array([x1, y2, 0]), 
-                    color = BLUE_C)
-        if params: 
-            y_param = min(y1,y2) + 1
-            if params[1]: 
-                param_text = MathTex(rf"{params[0]} \; ({params[1][0]:.1f})",
-                                     font_size = 40,
-                                     fill_color = WHITE,
-                                     fill_opacity=1).move_to(
-                                             [x1+1, y_param, 0])
-            else: 
-                param_text = MathTex(rf"{params[0]}", 
-                                     font_size= 40, 
-                                     fill_color=WHITE, 
-                                     fill_opacity=1).move_to(
-                                             [x1+0.5, y_param, 0])
+
+    def ctext(self, x1, y1, y2, params=None):
+        # -- arbitrary controlled-gate without labels 
+        # -- e.g. CZ gate 
+
+        ## -- control qubit
+        dot1 = Dot(point=np.array([x1, y1, 0]), radius=0.3, color=BLUE_C)
+
+        ## -- target qubit
+        dot2 = Dot(point=np.array([x1, y2, 0]), radius=0.3, color=BLUE_C)
+
+        ## -- line in between
+        line = Line(
+            start=np.array([x1, y1, 0]), end=np.array([x1, y2, 0]), color=BLUE_C
+        )
+
+        ## -- adding labels to right of quantum gate 
+        ## -- and any additional parameters  
+        if params:
+            y_param = min(y1, y2) + 1
+            if params[1]:
+                param_text = MathTex(
+                    rf"{params[0]} \; ({params[1][0]:.1f})",
+                    font_size=40, fill_color=WHITE, fill_opacity=1
+                ).move_to([x1 + 1, y_param, 0])
+            else:
+                param_text = MathTex(
+                    rf"{params[0]}",
+                    font_size=40, fill_color=WHITE, fill_opacity=1
+                ).move_to([x1 + 0.5, y_param, 0])
             gate = VGroup(dot1, dot2, line, param_text)
-        else: 
+        else:
             gate = VGroup(dot1, dot2, line)
 
-        return gate 
-
-    def swap(self, x1, y1, y2): 
-        cross1 = Cross(stroke_color = BLUE_E, 
-                       scale_factor = 0.4, stroke_width = 4).move_to([x1, y1, 0])
-        cross2 = Cross(stroke_color = BLUE_E,
-                       scale_factor = 0.4, stroke_width = 4).move_to([x1, y2, 0])
-
-        line = Line(start = np.array([x1,y1,0]),
-                    end = np.array([x1,y2,0]), 
-                    color = BLUE_E,
-                    stroke_width=5)
-        gate = VGroup(cross1, cross2, line)
         return gate
 
-    # general controlled unitary gate
-    def cgate(self, name, x1, y1, y2, y3 = None, color = MAROON_C, params = None): 
-        # control qubit
-        dot = Dot(point=np.array([x1, y1, 0]),
-                  radius=0.3, color=color)
-        target = self.single(name, x1, y2, 
-                             color=color, 
-                             params=params)
+    def swap(self, x1, y1, y2):
+        # SWAP gate 
+        cross1 = Cross(
+            stroke_color=BLUE_E, scale_factor=0.4, stroke_width=4
+        ).move_to([x1, y1, 0])
+        cross2 = Cross(
+            stroke_color=BLUE_E, scale_factor=0.4, stroke_width=4
+        ).move_to([x1, y2, 0])
+        line = Line(
+            start=np.array([x1, y1, 0]), end=np.array([x1, y2, 0]),
+            color=BLUE_E, stroke_width=5
+        )
 
-        # line in between
-        if y2 < y1:
-            end = np.array([x1, y2 + 0.5, 0])
-        else:
-            end = np.array([x1, y2 - 0.5, 0])
+        gate = VGroup(cross1, cross2, line)
 
-        line = Line(start=np.array([x1, y1, 0]),
-                    end=end,
-                    stroke_width=5, 
-                    color=color)
+        return gate
+
+    def cgate(self, name, x1, y1, y2, color=MAROON_C, params=None):
+        # -- general controlled unitary gate 
+
+        ## --  control qubit
+        dot = Dot(point=np.array([x1, y1, 0]), radius=0.3, color=color)
+
+        ## -- target qubit
+        target = self.single(name, x1, y2, color=color, params=params)
+
+        # line in between control & target qubit
+        end = np.array([x1, y2 + 0.5, 0]) if y2 < y1 else np.array([x1, y2 - 0.5, 0])
+        line = Line(
+            start=np.array([x1, y1, 0]), end=end, stroke_width=5, color=color
+        )
 
         gate = VGroup(dot, target, line)
+
         return gate
 
-    def fredkin(self, x1, y1, y2, y3): 
-        dot = Dot(point=np.array([x1, y1, 0]), 
-                  radius=0.3, 
-                  color=BLUE_E)
-        cross1 = Cross(stroke_color = BLUE_E,
-                       scale_factor = 0.4, stroke_width = 4).move_to([x1, y2, 0])
-        cross2 = Cross(stroke_color = BLUE_E,
-                       scale_factor = 0.4, stroke_width = 4).move_to([x1, y3, 0])
-        line = Line(start = np.array([x1,min(y1,y2,y3),0]),
-                    end = np.array([x1,max(y1,y2,y3),0]),
-                    color = BLUE_E)
+    def fredkin(self, x1, y1, y2, y3):
+        # -- CSWAP gate 
+
+        ## -- controlled qubit 
+        dot = Dot(point=np.array([x1, y1, 0]), radius=0.3, color=BLUE_E)
+
+        ## -- target qubits 
+        cross1 = Cross(
+            stroke_color=BLUE_E, scale_factor=0.4, stroke_width=4
+        ).move_to([x1, y2, 0])
+        cross2 = Cross(
+            stroke_color=BLUE_E, scale_factor=0.4, stroke_width=4
+        ).move_to([x1, y3, 0])
+
+        ## -- line connecting all three qubits
+        line = Line(
+            start=np.array([x1, min(y1, y2, y3), 0]),
+            end=np.array([x1, max(y1, y2, y3), 0]), color=BLUE_E
+        )
 
         gate = VGroup(dot, cross1, cross2, line)
-        return gate 
 
-    def ccx(self, x1, y1, y2, y3): 
-        dot1 = Dot(point = np.array([x1, y1, 0]),
-                  radius = 0.3,
-                  color = BLUE_E)
-        dot2 = Dot(point=np.array([x1, y2, 0]), 
-                   radius=0.3, 
-                   color=BLUE_E)
-        circle = Circle(radius = 0.5,
-                        color = BLUE_E,
-                        fill_opacity = 1).move_to([x1, y3, 0])
+        return gate
+
+    def ccx(self, x1, y1, y2, y3):
+        # -- CCX gate 
+
+        ## -- control qubits 
+        dot1 = Dot(point=np.array([x1, y1, 0]), radius=0.3, color=BLUE_E)
+        dot2 = Dot(point=np.array([x1, y2, 0]), radius=0.3, color=BLUE_E)
+
+        ## -- target qubit
+        circle = Circle(
+            radius=0.5, color=BLUE_E, fill_opacity=1
+        ).move_to([x1, y3, 0])
         plus = VGroup(
-                Line(start = np.array([x1- 0.3, y3, 0]),
-                     end = np.array([x1+ 0.3, y3, 0]),
-                     stroke_width = 2),
-                Line(start = np.array([x1, y3 - 0.3, 0]),
-                     end = np.array([x1, y3 + 0.3, 0]),
-                     stroke_width = 2))
+            Line(
+                start=np.array([x1 - 0.3, y3, 0]), end=np.array([x1 + 0.3, y3, 0]),
+                stroke_width=2
+            ),
+            Line(
+                start=np.array([x1, y3 - 0.3, 0]), end=np.array([x1, y3 + 0.3, 0]),
+                stroke_width=2
+            )
+        )
         circle = VGroup(circle, plus)
 
-        line = Line(start=np.array([x1, min(y1,y2,y3), 0]),
-                    end=np.array([x1, max(y1,y2,y3), 0]),
-                    color = BLUE_E,
-                    stroke_width = 5)
+        ## -- line connecting all three qubits 
+        line = Line(
+            start=np.array([x1, min(y1, y2, y3), 0]),
+            end=np.array([x1, max(y1, y2, y3), 0]), color=BLUE_E, stroke_width=5
+        )
 
         gate = VGroup(line, dot1, dot2, circle)
 
         return gate
 
-    def ccz(self, x1, y1, y2, y3): 
-        dot1 = Dot(point=np.array([x1, y1, 0]),
-                   radius=0.3, 
-                   color=BLUE_C)
-        dot2 = Dot(point=np.array([x1, y2, 0]), 
-                   radius=0.3,
-                   color=BLUE_C)
-        dot3 = Dot(point=np.array([x1, y3, 0]),
-                   radius=0.3,
-                   color=BLUE_C)
+    def ccz(self, x1, y1, y2, y3):
+        # -- CCZ gate 
 
-        line = Line(start=np.array([x1, min(y1,y2,y3), 0]), 
-                    end=np.array([x1, max(y1,y2,y3), 0]),
-                    color=BLUE_C,
-                    stroke_width=5)
+        dot1 = Dot(point=np.array([x1, y1, 0]), radius=0.3, color=BLUE_C)
+        dot2 = Dot(point=np.array([x1, y2, 0]), radius=0.3, color=BLUE_C)
+        dot3 = Dot(point=np.array([x1, y3, 0]), radius=0.3, color=BLUE_C)
 
+        ## -- line connecting all three 
+        line = Line(
+            start=np.array([x1, min(y1, y2, y3), 0]),
+            end=np.array([x1, max(y1, y2, y3), 0]), color=BLUE_C, stroke_width=5
+        )
         gate = VGroup(line, dot1, dot2, dot3)
-
         return gate
 
-    def ccgate(self, name, x1, y1, y2, y3, params=None): 
-        dot1 = Dot(point=np.array([x1, y1, 0]), 
-                   radius=0.3, 
-                   color=MAROON_C)
-        dot2 = Dot(point=np.array([x1, y2, 0]), 
-                   radius=0.3,
-                   color=MAROON_C)
-        target = self.single(name, x1, y3, 
-                             params=params,
-                             color=MAROON_C)
+    def ccgate(self, name, x1, y1, y2, y3, params=None):
+        # -- abitary two-control-qubit unitary gates 
 
-        line = Line(start=np.array([x1, min(y1,y2,y3), 0]), 
-                    end=np.array([x1, max(y1,y2,y3), 0]),
-                    stroke_width=5,
-                    color=MAROON_C)
+        ## -- control qubits 
+        dot1 = Dot(point=np.array([x1, y1, 0]), radius=0.3, color=MAROON_C)
+        dot2 = Dot(point=np.array([x1, y2, 0]), radius=0.3, color=MAROON_C)
+
+        ## -- target qubit 
+        target = self.single(name, x1, y3, params=params, color=MAROON_C)
+
+        ## -- line connecting all three qubits
+        line = Line(
+            start=np.array([x1, min(y1, y2, y3), 0]),
+            end=np.array([x1, max(y1, y2, y3), 0]), stroke_width=5, color=MAROON_C
+        )
 
         gate = VGroup(line, dot1, dot2, target)
 
         return gate
 
-    def cccgate(self, name, x1, y1, y2, y3, y4, params=None): 
-        dot1 = Dot(point=np.array([x1, y1, 0]),
-                   radius=0.3,
-                   color=MAROON_C)
-        dot2 = Dot(point=np.array([x1, y2, 0]),
-                   radius=0.3,
-                   color=MAROON_C)
-        dot3 = Dot(point=np.array([x1, y3, 0]),
-                   radius=0.3, 
-                   color=MAROON_C)
-        target = self.single(name, x1, y4,
-                             params=params,
-                             color=MAROON_C)
+    def cccgate(self, name, x1, y1, y2, y3, y4, params=None):
+        # -- arbitrary three-control-qubit gates 
 
-        line = Line(start=np.array([x1, min(y1,y2,y3,y4), 0]),
-                    end=np.array([x1, max(y1,y2,y3,y4), 0]),
-                    stroke_width=5,
-                    color=MAROON_D)
+        ## -- control qubits
+        dot1 = Dot(point=np.array([x1, y1, 0]), radius=0.3, color=MAROON_C)
+        dot2 = Dot(point=np.array([x1, y2, 0]), radius=0.3, color=MAROON_C)
+        dot3 = Dot(point=np.array([x1, y3, 0]), radius=0.3, color=MAROON_C)
+
+        ## -- target qubits 
+        target = self.single(name, x1, y4, params=params, color=MAROON_C)
+
+        ## -- line connecting all qubits
+        line = Line(
+            start=np.array([x1, min(y1, y2, y3, y4), 0]),
+            end=np.array([x1, max(y1, y2, y3, y4), 0]), stroke_width=5,
+            color=MAROON_D
+        )
 
         gate = VGroup(line, dot1, dot2, dot3, target)
 
         return gate
 
-    def multiqubit(self, name, x, y, color = MAROON_D, params = None, idxs = None):
-        label = MathTex(rf"{name}",
-                        font_size = 60).move_to([x+0.5, np.mean(y), 0])
+    def multiqubit(self, name, x, y, color=MAROON_D, params=None, idxs=None):
+        # -- create label for the gate
+        label = MathTex(rf"{name}", font_size=60).move_to([x + 0.5, np.mean(y), 0])
         group = VGroup(label)
 
+        # -- add parameter text if provided
         if params:
-            param_str = ", ".join([f"{param:.2f}" for param in params])
-            param_str = MathTex(param_str,
-                                font_size = 40).next_to(label, DOWN*1)
-            group = VGroup(label, param_str)
+            param_str = MathTex(", ".join(f"{param:.2f}" for param in params), font_size=40).next_to(label, DOWN)
+            group.add(param_str)
 
-        group_rect = Rectangle(width=label.width + 0.1,
-                               height=label.height).move_to(label.get_center())
+        # -- create backbone rectangle of the gate
+        group_rect = Rectangle(
+            width=label.width + 0.1, height=label.height
+        ).move_to(label.get_center())
+
+        # -- add qubit labels to match ibm qiskit's aesthetic
         idxs_ = VGroup()
         y_ = y.copy()
         if idxs:
-            for i in range(len(idxs)): 
-                idx = MathTex(rf"{idxs[i]}",
-                              font_size = 60).move_to([x-0.3, max(y_), 0])
+            for i, idx_value in enumerate(idxs):
+                idx = MathTex(rf"{idx_value}", font_size=60).move_to([x - 0.3, max(y_), 0])
                 idxs_.add(idx)
                 y_.remove(max(y_))
-        idxs_.next_to(group_rect, LEFT)
-        group = VGroup(group, idxs_)
+            idxs_.next_to(group_rect, LEFT)
 
+        # -- combine group with qubit labels
+        group.add(idxs_)
+
+        # -- create and position the gate
         gate = VGroup(
-                Rectangle(
-                    width=group.width+0.3, 
-                    height=math.ceil(group.height+0.4), 
-                    fill_color=color, color=color,
-                    fill_opacity=1).move_to(group.get_center()), 
-                group).move_to([x, np.mean(y), 0])
+            Rectangle(
+                width=group.width + 0.3,
+                height=math.ceil(group.height + 0.4),
+                fill_color=color,
+                color=color,
+                fill_opacity=1
+            ).move_to(group.get_center()),
+            group
+        ).move_to([x, np.mean(y), 0])
 
         return gate
 
@@ -672,14 +706,11 @@ class BuildCircuit(Scene):
             elif category == 'cphase_gates': 
                 init = Gates().ctext(0, 0, 0, params=[name, params])
                 param_location = False
-                if abs(qubits[0]-qubits[1]) % 2 == 0: 
-                    param_location = True
                 if not np.allclose(x_coords, zeros): 
                     x_gate += init.width/2
                     x[min_idx:max_idx+1] += init.width/2
                 gate = Gates().ctext(x_gate, y_gate[0], y_gate[1], 
-                                     params=[name, params], 
-                                     param_location = param_location)
+                                     params=[name, params])
 
             elif category == 'general_controlled_gates':
                 init = Gates().cgate(name, 0, 0, 0, params=params)
