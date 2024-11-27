@@ -1,6 +1,4 @@
 from manim import *
-from bisect import bisect_left, bisect_right
-from typing import List, Set
 from qiskit import QuantumCircuit
 from qiskit.circuit.random import random_circuit
 
@@ -214,10 +212,10 @@ class Gates(Scene):
         )
 
         # -- parameter label right of the qubit gates 
-        if params: 
+        if params:
             y_param = min(y1, y2) + 1 
             if params[1]: 
-                param_text = MathTex(rf"{params[0]} \; ({params[1][0]:.1f})", 
+                param_text = MathTex(rf"{params[0]} \; ({params[1][0]:.2f})", 
                                      font_size=40, 
                                      fill_color=WHITE,
                                      fill_opacity=1, 
@@ -228,7 +226,7 @@ class Gates(Scene):
                                      fill_color=WHITE, 
                                      fill_opacity=1,
                 ).move_to([x+0.5, y_param, 0])
-            gate = VGroup(control, target, line, param_text) 
+            gate = VGroup(control, target, line, param_text)
         else: 
             gate = VGroup(control, target, line) 
 
@@ -461,7 +459,7 @@ class Gates(Scene):
         ).move_to(label.get_center())
 
         # -- logic to place gate idxs labels at correct wire 
-        idxs_, y_ = VGroup(), y.copy() 
+        idxs_, y_ = VGroup(), list(y.copy())
         if idxs: 
             for i in range(len(idxs)): 
                 idx = MathTex(
@@ -492,6 +490,20 @@ class Build(Scene):
         -- object into manim-space circuit visual 
     """ 
     def construct(self, qc): 
+        self.sort_instructions(qc)
+        self.decompose() 
+        self.build_circuit()
+
+        # -- fitting the entire circuit within manim-space frame
+        scaling_factor = min(
+                config.frame_width/self.circuit.width, 
+                config.frame_height/self.circuit.height
+        )
+        self.circuit.scale(scaling_factor)
+
+        self.play(Write(self.circuit), run_time = 10)
+        self.wait()
+
         return 
 
     def sort_instructions(self, qc):
@@ -516,15 +528,21 @@ class Build(Scene):
 
             # -- increases start time for all qubits
             # -- in collision of instruction gate
-            for q in range(min_qubit, max_qubit+1):
-                qubit_times[q] = start_time + 1
+            if instruction.operation.name == 'measure': 
+                for q in range(0, qc.num_qubits+1): 
+                    qubit_times[q] = start_time + 1
+            else: 
+                for q in range(min_qubit, max_qubit+1):
+                    qubit_times[q] = start_time + 1
 
         sorted_instructions.sort(key=lambda q: q[0])
+
         self.sorted_instructions = sorted_instructions
+        self.qc = qc 
 
         return
 
-    def decompose(self, qc):
+    def decompose(self):
         # -- decomposes qiskit QuantumCircuit 
         # -- into sorted dataframe 
         
@@ -555,8 +573,8 @@ class Build(Scene):
             ]
 
             # -- get qubit and clbit indices instruction acts on 
-            qbits = [qc.find_bit(qubit).index for qubit in instruction.qubits]
-            cbits = [qc.find_bit(clbit).index for clbit in instruction.clbits]
+            qbits = [self.qc.find_bit(qubit).index for qubit in instruction.qubits]
+            cbits = [self.qc.find_bit(clbit).index for clbit in instruction.clbits]
 
             # -- append the records as a dictionary
             data_records.append({
@@ -578,27 +596,33 @@ class Build(Scene):
 
         return
 
-    def build(self, qc, gap = 1):
+    def build_circuit(self, gap = 0.5):
         circuit_data = self.circuit_data 
-        num_qubits = qc.num_qubits 
+        num_qubits = self.qc.num_qubits 
+        num_clbits = self.qc.num_clbits
 
         # -- evenly spaced quantum wires centered around y=0
         wire_y_pos = np.arange(num_qubits-1, -num_qubits, -2)
 
+        # -- only making one classical register wire right now 
+        # -- that corresponds to qc.measure_all()
+        # -- will update afterwards
+        clwire_y_pos = min(wire_y_pos) - 3
+
+        grouped_gates = [] 
         for time in range(max(circuit_data['start_times'])+1): 
             # -- filtering the df for each start time 
             filtered_df = circuit_data[circuit_data['start_times'] == time]
 
             # -- iterating through gates with identical start times 
             # -- they will be aligned in the same column 
-            gates = [] 
+            column_group = []
             for _, elements in filtered_df.iterrows(): 
-                category = elements['category']
-                name = elements['name']
-                color = elements['color'] 
+                category = elements['categories']
+                name = elements['names']
+                color = elements['colors'] 
                 params = elements['params']
-                qbits = elements['qubits']
-                cbits = elements['cbits'] 
+                qbits = elements['qbits']
 
                 y_value = wire_y_pos[qbits]
                 gate_instance = Gates()
@@ -636,10 +660,10 @@ class Build(Scene):
 
                 elif category == 'cphase_gate': 
                     gate = gate_instance.ctext(
-                            x=0, 
+                            x=-gate.width/3, # -- to allow for parameters to the right 
                             y1=y_value[0], 
                             y2=y_value[1], 
-                            params=[name,params]
+                            params=[name, params]
                     )
                 elif category == 'general_controlled_gate':
                     gate = gate_instance.cgate(
@@ -662,7 +686,7 @@ class Build(Scene):
                 elif category == 'multi_controlled_gate': 
                     if name.lower() in ['ccx', 'ccy', 'ccz', 'cswap']:
                         if hasattr(gate_instance, name.lower()): 
-                            method = getattr(gate_instance, name.lower()): 
+                            method = getattr(gate_instance, name.lower())
                             if callable(method): 
                                 try: 
                                     gate = method(
@@ -681,9 +705,124 @@ class Build(Scene):
                                 y2=y_value[1], 
                                 y3=y_value[2], 
                                 y4=y_value[3],
-                            params=params
+                            params=params  
                         )
-                gates.append(gate)
+                elif category == 'measure': 
+                    gate = gate_instance.measure(
+                            x=0, 
+                            y1=y_value[0], 
+                            y2=clwire_y_pos
+                    )
+
+                # -- adds gate with identical start time to group 
+                column_group.append(gate)
+
+            # -- adds entire VGroup() of gates with identical start times
+            grouped_gates.append(column_group)
+
+        # -- aligning all circuits in column 
+        # -- adding them to universal list 
+        # -- that contains all gates in circuit 
+        start_pos = 0 
+        full_circuit = []
+        for column in grouped_gates: 
+            max_gate_width = max([gate.width for gate in column])
+            for gate in column: 
+                full_circuit.append(gate.shift(RIGHT*(start_pos+max_gate_width/2))) 
+
+            start_pos += max_gate_width + gap
+
+        # -- all the gates in the circuit 
+        circuit = VGroup(*full_circuit)
+
+        # -- adding qubit wires 
+        qwires = VGroup() 
+        idx = 0
+        for wire in wire_y_pos: 
+            qwires.add( 
+                Line(
+                    start=np.array([circuit.get_center()[0]-circuit.width/2-0.3, wire, 0]),
+                    end=np.array([circuit.get_center()[0]+circuit.width/2+0.3, wire, 0]), 
+                    stroke_width=5
+                )
+            )
+            qwires.add(
+                MathTex(
+                    rf"q_{idx}", 
+                    font_size=55
+                ).move_to([circuit.get_center()[0]-circuit.width/2-1, wire, 0])
+            )
+            idx += 1
+
+        cwires = VGroup() 
+        if num_clbits != 0: 
+            # -- classical bit wire positions centered around 
+            # -- y value 2 lower than lowest qubit wire 
+            cwires.add(
+                Line(
+                    start=np.array([circuit.get_center()[0]-circuit.width/2-0.3, clwire_y_pos+0.1, 0]), 
+                    end=np.array([circuit.get_center()[0]+circuit.width/2+0.3, clwire_y_pos+0.1, 0]), 
+                    stroke_width=2, 
+                    color=YELLOW_A
+                )
+            )
+            cwires.add(
+                Line(
+                    start=np.array([circuit.get_center()[0]-circuit.width/2-0.3, clwire_y_pos-0.1, 0]), 
+                    end=np.array([circuit.get_center()[0]+circuit.width/2+0.3, clwire_y_pos-0.1, 0]),
+                    stroke_width=2, 
+                    color=YELLOW_A
+                )
+            )
+            cwires.add(
+                Line(
+                    start=np.array([circuit.get_center()[0]-circuit.width/2-0.05, clwire_y_pos-0.2, 0]), 
+                    end=np.array([circuit.get_center()[0]-circuit.width/2+0.05, clwire_y_pos, 0]), 
+                    stroke_width=2, 
+                    color=YELLOW_A
+                )
+            )
+            cwires.add(
+                Text(
+                    "meas", 
+                    font_size=55
+                ).move_to([circuit.get_center()[0]-circuit.width/2-1.5, clwire_y_pos, 0]))
+            cwires.add(
+                MathTex(
+                    rf"{num_clbits}", 
+                    font_size=35
+                ).move_to([circuit.get_center()[0]-circuit.width/2-0.15, clwire_y_pos+0.3, 0]))
+            idx+=1
+        self.circuit = VGroup(qwires, cwires, circuit).move_to([0, 0, 0])
+
+        return
+
+
+                    
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    qc = random_circuit(3, 10)
+    qc.measure_all()
+    print(qc)
+    build_circuit_scene = Build() 
+    build_circuit_scene.construct(qc)
+
+
+
+
+
+
+
+            
+
 
 
 

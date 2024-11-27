@@ -100,7 +100,7 @@ cy:
 cz:
   latex: "CZ"
   color: "BLUE_C"
-  category: "cx_like_gate"
+  category: "cphase_gate"
 
 swap:
   latex: "SWAP"
@@ -160,6 +160,10 @@ ch:
 csdg:
   latex: "S^\\dagger"
   color: "BLUE_C"
+  category: "general_controlled_gate"
+
+cu: 
+  latex: "U"
   category: "general_controlled_gate"
 
 csx:
