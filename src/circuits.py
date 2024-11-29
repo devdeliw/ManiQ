@@ -6,8 +6,6 @@ import ruamel.yaml as yaml
 import numpy as np
 import pandas as pd
 import math
-import copy
-import json
 
 
 class Gates(Scene):
@@ -793,6 +791,7 @@ class Build(Scene):
                     font_size=35
                 ).move_to([circuit.get_center()[0]-circuit.width/2-0.15, clwire_y_pos+0.3, 0]))
             idx+=1
+
         self.circuit = VGroup(qwires, cwires, circuit).move_to([0, 0, 0])
 
         return
