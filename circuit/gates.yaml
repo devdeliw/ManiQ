@@ -1,0 +1,262 @@
+x:
+  latex: "X"
+  color: "BLUE_E"
+  category: "single_qubit_gate"
+
+y:
+  latex: "Y"
+  category: "single_qubit_gate"
+
+z:
+  latex: "Z"
+  color: "BLUE_C"
+  category: "single_qubit_gate"
+
+h:
+  latex: "H"
+  color: "RED_C"
+  category: "single_qubit_gate"
+
+sdg:
+  latex: "S^\\dagger"
+  color: "BLUE_C"
+  category: "single_qubit_gate"
+
+s:
+  latex: "S"
+  color: "BLUE_C"
+  category: "single_qubit_gate"
+
+t:
+  latex: "T"
+  color: "BLUE_C"
+  category: "single_qubit_gate"
+
+p:
+  latex: "P"
+  color: "BLUE_C"
+  category: "single_qubit_gate"
+
+id:
+  latex: "I"
+  color: "BLUE_E"
+  category: "single_qubit_gate"
+
+tdg:
+  latex: "T^\\dagger"
+  color: "BLUE_C"
+  category: "single_qubit_gate"
+
+sx:
+  latex: "\\sqrt{X}"
+  category: "single_qubit_gate"
+
+sxdg:
+  latex: "\\sqrt{X}^\\dagger"
+  category: "single_qubit_gate"
+
+rx:
+  latex: "R_x"
+  category: "single_qubit_gate"
+
+ry:
+  latex: "R_y"
+  category: "single_qubit_gate"
+
+rz:
+  latex: "R_z"
+  category: "single_qubit_gate"
+
+u1:
+  latex: "U_1"
+  category: "single_qubit_gate"
+  color: 'BLUE_C'
+
+u2:
+  latex: "U_2"
+  category: "single_qubit_gate"
+
+u3:
+  latex: "U_3"
+  category: "single_qubit_gate"
+
+u:
+  latex: "U"
+  category: "single_qubit_gate"
+
+r:
+  latex: "R"
+  category: "single_qubit_gate"
+
+cx:
+  latex: "CX"
+  color: "BLUE_E"
+  category: "cx_like_gate"
+
+cy:
+  latex: "CY"
+  category: "cx_like_gate"
+
+cz:
+  latex: "CZ"
+  color: "BLUE_C"
+  category: "cphase_gate"
+
+swap:
+  latex: "SWAP"
+  color: "BLUE_C"
+  category: "cx_like_gate"
+
+measure:
+  latex: "measure"
+  category: "measure"
+
+barrier:
+  latex: "barrier"
+  category: "cx_like_gate"
+
+cp:
+  latex: "P"
+  color: "BLUE_C"
+  category: "cphase_gate"
+
+cphase:
+  latex: "P"
+  color: "BLUE_C"
+  category: "cphase_gate"
+
+rzz:
+  latex: "ZZ"
+  color: "BLUE_C"
+  category: "cphase_gate"
+
+crz:
+  latex: "R_z"
+  category: "cphase_gate"
+
+cs:
+  latex: "S"
+  color: "BLUE_C"
+  category: "cphase_gate"
+
+ct:
+  latex: "T"
+  color: "BLUE_C"
+  category: "cphase_gate"
+
+cu1:
+  latex: "U_1"
+  category: "cphase_gate"
+
+cu3:
+  latex: "U_3"
+  category: "cphase_gate"
+
+ch:
+  latex: "H"
+  color: "RED_C"
+  category: "general_controlled_gate"
+
+csdg:
+  latex: "S^\\dagger"
+  color: "BLUE_C"
+  category: "general_controlled_gate"
+
+cu: 
+  latex: "U"
+  category: "general_controlled_gate"
+
+csx:
+  latex: "\\sqrt{X}"
+  category: "general_controlled_gate"
+
+crx:
+  latex: "R_x"
+  category: "general_controlled_gate"
+
+cry:
+  latex: "R_y"
+  category: "general_controlled_gate"
+
+cr:
+  latex: "R"
+  category: "general_controlled_gate"
+
+iswap:
+  latex: "\\text{iSWAP}"
+  color: "BLUE_E"
+  category: "multi_qubit_gate"
+
+dcx:
+  latex: "\\text{DCX}"
+  color: "BLUE_E"
+  category: "multi_qubit_gate"
+
+xx:
+  latex: "XX"
+  category: "multi_qubit_gate"
+
+yy:
+  latex: "YY"
+  category: "multi_qubit_gate"
+
+zz:
+  latex: "ZZ"
+  category: "multi_qubit_gate"
+
+xy:
+  latex: "XY"
+  category: "multi_qubit_gate"
+
+rxx:
+  latex: "R_{XX}"
+  category: "multi_qubit_gate"
+
+ryy:
+  latex: "R_{YY}"
+  category: "multi_qubit_gate"
+
+rzx:
+  latex: "R_{ZX}"
+  category: "multi_qubit_gate"
+
+ecr:
+  latex: "\\text{ECR}"
+  category: "multi_qubit_gate"
+
+xx_minus_yy:
+  latex: "XX - YY"
+  category: "multi_qubit_gate"
+
+xx_plus_yy:
+  latex: "XX + YY"
+  category: "multi_qubit_gate"
+
+rccx:
+  latex: "\\text{Rccx}"
+  category: "multi_qubit_gate"
+
+rcccx:
+  latex: "\\text{Rcccx}"
+  category: "multi_qubit_gate"
+
+ccx:
+  latex: "ccx"
+  category: "multi_controlled_gate"
+
+ccy:
+  latex: "ccy"
+  category: "multi_controlled_gate"
+
+ccz:
+  latex: "ccz"
+  category: "multi_controlled_gate"
+
+c3sx:
+  latex: "\\sqrt{X}"
+  category: "multi_controlled_gate"
+
+cswap:
+  latex: "cswap"
+  category: "multi_controlled_gate"
+
