@@ -1,6 +1,6 @@
 from manim import * 
 from manim.opengl import *
-from qiskit.circuit.random import random_circuit
+from random_circuit import random_circuit
 from qiskit import QuantumCircuit
 
 from gates import Gates 
@@ -10,9 +10,13 @@ import numpy as np
 import pandas as pd 
 import math 
 
+
+config.preview = True
 config.write_to_movie = False 
 config.renderer = 'opengl'
-config.preview = True 
+
+pd.set_option("display.expand_frame_repr", True)
+pd.set_option("display.max_columns", 8)
 
 class ManiQCircuit(Scene, Gates): 
     """ 
@@ -21,17 +25,12 @@ class ManiQCircuit(Scene, Gates):
 
     """
 
-    def __init__(self, **kwargs): 
-        """ 
-        Args: 
-            qc (QuantumCircuit): Qiskit quantum circuit object 
-        """
+    def sort_instructions(self): 
 
-        super().__init__(**kwargs)
-        self.qc = random_circuit(5, depth=5) 
+        self.qc = QuantumCircuit(5) 
+        self.qc = self.qc.compose(random_circuit(5, depth=3))
         self.qc.measure_all()
 
-    def sort_instructions(self): 
         """ 
         Logic to sort qiskit circuit to ensure no manim gate overlap. 
 
@@ -113,6 +112,7 @@ class ManiQCircuit(Scene, Gates):
                 'categories': category, 
                 'start_times': start_time, 
                 'names': latex, 
+                'qiskit_name': operation_name,
                 'colors': color, 
                 'params': params, 
                 'qbits': qbits, 
@@ -121,6 +121,7 @@ class ManiQCircuit(Scene, Gates):
 
         # Generate DataFrame
         self.circuit_data = pd.DataFrame(data_records) 
+        self.circuit_data.to_csv('~/ManiQ/circuit/sandbox.csv')
 
         # Sort based on start_time for better organization 
         self.circuit_data.sort_values(by='start_times', inplace=True)
@@ -349,7 +350,7 @@ class ManiQCircuit(Scene, Gates):
 
         # Final circuit mobject 
         self.gate_references = gate_references
-        self.circuit = VGroup(qwires, cwires, circuit).move_to([0, 0, 0])
+        self.circuit = VGroup(circuit).move_to([0, 0, 0])
         return
 
     def assemble(self):
@@ -358,7 +359,6 @@ class ManiQCircuit(Scene, Gates):
 
         """
 
-        print(self.qc) 
 
         self.sort_instructions()
         self.decompose() 
@@ -370,7 +370,9 @@ class ManiQCircuit(Scene, Gates):
         )*0.5
 
         self.circuit.scale(scaling_factor) 
-        print(self.gate_references)
+        print(self.qc)
+        print(self.circuit_data)
+
         return 
 
     def construct(self): 
@@ -378,38 +380,8 @@ class ManiQCircuit(Scene, Gates):
         Rendering Method. 
 
         """ 
+
         self.assemble() 
         self.play(FadeIn(self.circuit)) 
         self.interactive_embed() 
 
-
-
-
-
-
-
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-                                
-                
-
-
-
-
-
-
-
-
-        
