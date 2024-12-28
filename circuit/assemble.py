@@ -4,11 +4,11 @@ from random_circuit import random_circuit
 from qiskit import QuantumCircuit
 
 from gates import Gates 
+from updaters import *
 
 import ruamel.yaml as yaml 
 import numpy as np 
 import pandas as pd 
-import math 
 
 
 config.preview = True
@@ -27,8 +27,7 @@ class ManiQCircuit(Scene, Gates):
 
     def sort_instructions(self): 
 
-        self.qc = QuantumCircuit(5) 
-        self.qc = self.qc.compose(random_circuit(5, depth=3))
+        self.qc = random_circuit(4, depth=4)
         self.qc.measure_all()
 
         """ 
@@ -153,16 +152,18 @@ class ManiQCircuit(Scene, Gates):
 
 
         # Will attach every gate with a unique ID 
-        # Allowing user to remove individual gates 
+        # Allowing user to remove individual gates
         gate_references = {}
         # List to store gates of same column in subarrays
+        grouped_ids = []
         grouped_gates = [] 
 
         for time in range(max(circuit_data['start_times'])+1): 
             filtered_df = circuit_data[circuit_data['start_times'] == time] 
 
             # Gates with identical start times are grouped in same column 
-            column_group = [] 
+            column_group = []
+            column_ids = []
             for _, elements in filtered_df.iterrows(): 
                 category = elements['categories'] 
                 name = elements['names'] 
@@ -265,24 +266,37 @@ class ManiQCircuit(Scene, Gates):
                     raise UnboundLocalError(f'Unable to find gate category; gate {name} unbound.')
 
                 # Unique identification to individual gate
-                gate_id = f'{name}{qbits}_{time}' 
+                gate_id = f'{qbits}_{time}' 
+                # Gate_id refers to mobject and its bounding box
                 gate_references[gate_id] = gate 
 
                 # Append gate to column 
                 column_group.append(gate)
+                column_ids.append(gate_id)
 
             # Adds entire column of gates as sublist 
             grouped_gates.append(column_group) 
+            grouped_ids.append(column_ids)
 
         # Aligns all circuits in column and adds them to universal gate list
         start_pos = 0 
         gates = [] 
 
-        for column in grouped_gates: 
+        for col_idx in range(len(grouped_gates)): 
+            column_gates = grouped_gates[col_idx]
+            column_ids = grouped_ids[col_idx]
             # Aligns columns based on maximum column gate width 
-            max_gate_width = max([gate.width for gate in column])
-            for gate in column: 
-                gates.append(gate.shift(RIGHT*(start_pos+max_gate_width/2)))
+            max_gate_width = max([gate.width for gate in column_gates])
+            for gate_idx in range(len(column_gates)): 
+                gate = column_gates[gate_idx]
+                gate_id = column_ids[gate_idx]
+
+                gate = gate.shift(RIGHT*(start_pos+max_gate_width/2))
+
+                gates.append(gate)
+
+                bbox = get_bounding_box(gate)
+                gate_references[gate_id] = [gate, bbox]
 
             start_pos += max_gate_width + gap 
 
@@ -359,17 +373,16 @@ class ManiQCircuit(Scene, Gates):
 
         """
 
-
         self.sort_instructions()
         self.decompose() 
         self.build_circuit() 
 
-        scaling_factor = min(
+        """scaling_factor = min(
                 config.frame_width/self.circuit.width, 
                 config.frame_height/self.circuit.height, 
-        )*0.5
+        )*0.8"""
 
-        self.circuit.scale(scaling_factor) 
+        #self.circuit.scale(scaling_factor) 
         print(self.qc)
         print(self.circuit_data)
 
