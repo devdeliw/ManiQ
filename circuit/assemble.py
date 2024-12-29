@@ -3,12 +3,13 @@ from manim.opengl import *
 from random_circuit import random_circuit
 from qiskit import QuantumCircuit
 
-from gates import Gates 
-from updaters import *
+from gates import Gates
+from updaters import global_cursor_to_manim
 
 import ruamel.yaml as yaml 
 import numpy as np 
 import pandas as pd 
+import pyautogui
 
 
 config.preview = True
@@ -17,6 +18,7 @@ config.renderer = 'opengl'
 
 pd.set_option("display.expand_frame_repr", True)
 pd.set_option("display.max_columns", 8)
+
 
 class ManiQCircuit(Scene, Gates): 
     """ 
@@ -27,7 +29,7 @@ class ManiQCircuit(Scene, Gates):
 
     def sort_instructions(self): 
 
-        self.qc = random_circuit(4, depth=4)
+        self.qc = random_circuit(5, depth=5)
         self.qc.measure_all()
 
         """ 
@@ -111,7 +113,7 @@ class ManiQCircuit(Scene, Gates):
                 'categories': category, 
                 'start_times': start_time, 
                 'names': latex, 
-                'qiskit_name': operation_name,
+                'qiskit_names': operation_name,
                 'colors': color, 
                 'params': params, 
                 'qbits': qbits, 
@@ -120,7 +122,6 @@ class ManiQCircuit(Scene, Gates):
 
         # Generate DataFrame
         self.circuit_data = pd.DataFrame(data_records) 
-        self.circuit_data.to_csv('~/ManiQ/circuit/sandbox.csv')
 
         # Sort based on start_time for better organization 
         self.circuit_data.sort_values(by='start_times', inplace=True)
@@ -167,6 +168,7 @@ class ManiQCircuit(Scene, Gates):
             for _, elements in filtered_df.iterrows(): 
                 category = elements['categories'] 
                 name = elements['names'] 
+                qiskit_name = elements['qiskit_names']
                 color = elements['colors'] 
                 params = elements['params'] 
                 qbits = elements['qbits'] 
@@ -266,7 +268,7 @@ class ManiQCircuit(Scene, Gates):
                     raise UnboundLocalError(f'Unable to find gate category; gate {name} unbound.')
 
                 # Unique identification to individual gate
-                gate_id = f'{qbits}_{time}' 
+                gate_id = f'{qiskit_name}_{time}' 
                 # Gate_id refers to mobject and its bounding box
                 gate_references[gate_id] = gate 
 
@@ -280,7 +282,8 @@ class ManiQCircuit(Scene, Gates):
 
         # Aligns all circuits in column and adds them to universal gate list
         start_pos = 0 
-        gates = [] 
+        gates = []
+        gate_ids = []
 
         for col_idx in range(len(grouped_gates)): 
             column_gates = grouped_gates[col_idx]
@@ -294,11 +297,12 @@ class ManiQCircuit(Scene, Gates):
                 gate = gate.shift(RIGHT*(start_pos+max_gate_width/2))
 
                 gates.append(gate)
+                gate_ids.append(gate_id)
 
-                bbox = get_bounding_box(gate)
-                gate_references[gate_id] = [gate, bbox]
-
-            start_pos += max_gate_width + gap 
+            start_pos += max_gate_width + gap
+            
+        # Store all gate_ids
+        self.gate_ids = gate_ids 
 
         # Universal gate mobject
         circuit = VGroup(*gates) 
@@ -337,7 +341,7 @@ class ManiQCircuit(Scene, Gates):
                 Line(
                     start=np.array([circuit.get_center()[0]-circuit.width/2-0.3, clwire_y_pos-0.1, 0]), 
                     end=np.array([circuit.get_center()[0]+circuit.width/2+0.3, clwire_y_pos-0.1, 0]),
-                    stroke_width=2, 
+                    stroke_widith=2, 
                     color=YELLOW_A
                 )
             )
@@ -367,6 +371,22 @@ class ManiQCircuit(Scene, Gates):
         self.circuit = VGroup(circuit).move_to([0, 0, 0])
         return
 
+    def update_gate_pos(self): 
+        # Update bounding box for each gate
+        for gate_id in self.gate_ids:
+            # Checking if dictionary contains lists
+            # i.e. if this method has already been called
+            if not isinstance(self.gate_references[gate_id], list): 
+                gate = self.gate_references[gate_id]
+            else: 
+                gate = self.gate_references[gate_id][0]
+
+            # Update dictionary to contain mobject bbox
+            self.gate_references[gate_id] = [
+                gate, [gate.get_corner(DL), gate.get_corner(UR)]
+            ]
+        return
+
     def assemble(self):
         """ 
         Performs Manim circuit assembly instructions in correct order. 
@@ -377,14 +397,16 @@ class ManiQCircuit(Scene, Gates):
         self.decompose() 
         self.build_circuit() 
 
-        """scaling_factor = min(
+        self.scaling_factor = min(
                 config.frame_width/self.circuit.width, 
                 config.frame_height/self.circuit.height, 
-        )*0.8"""
+        )*0.8
 
-        #self.circuit.scale(scaling_factor) 
+        self.circuit.scale(self.scaling_factor)
+        
         print(self.qc)
         print(self.circuit_data)
+
 
         return 
 
@@ -393,8 +415,46 @@ class ManiQCircuit(Scene, Gates):
         Rendering Method. 
 
         """ 
+        self.gate_label = Text('Choose a gate.', color=GRAY_C)
+        self.gate_label.scale(0.5).shift(DOWN*3.5)
 
         self.assemble() 
         self.play(FadeIn(self.circuit)) 
+        self.play(Write(self.gate_label))
         self.interactive_embed() 
 
+    def on_mouse_press(self, point, button, modifiers):
+
+        """
+        Runs everytime mouse is pressed in pyglet window
+
+        """
+        # Update positions of every gate
+        self.update_gate_pos()
+        # Get cursor coordinates in manim-space
+        x_manim, y_manim = global_cursor_to_manim(self, 1)
+        print(self.scaling_factor)
+        print(x_manim, y_manim)
+        self.chosen_gate_id = ""
+
+        def update_gate_label(): 
+            for gate_id, gate_data in self.gate_references.items():
+                gate_bbox = np.array(gate_data[1])
+
+                if (gate_bbox[0, 0] <= x_manim <= gate_bbox[1, 0] and 
+                    gate_bbox[0, 1] <= y_manim <= gate_bbox[1, 1]):
+
+                    gate_label = Text(gate_id, color=GRAY_C).scale(0.5).shift(DOWN*3.5)
+                    self.play(ReplacementTransform(self.gate_label, gate_label))
+                    
+                    self.gate_label = gate_label # Explicitly replacing -- embed finnicky
+                    self.chosen_gate_id = gate_id 
+            return 
+
+        update_gate_label() 
+
+
+
+
+        super().on_mouse_press(point, button, modifiers)
+        return 
