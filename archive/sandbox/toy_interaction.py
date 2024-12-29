@@ -39,11 +39,18 @@ class InteractiveRadius(Scene):
             print("Global screen coords:", pyautogui.position())
             print(f"Manim coords:        ({x_manim:.3f}, {y_manim:.3f})")
 
-            self.play(self.cursor_dot.animate.move_to(np.array([x_manim, y_manim, 0])))
+            self.play(self.cursor_dot.animate.move_to([x_manim, y_manim, 0]))
 
         super().on_key_press(symbol, modifiers)
 
-    def global_cursor_to_manim(self): 
+    def global_cursor_to_manim(self):
+        """ 
+        Converts pixel coordinates of cursor to manim-space coordinates. 
+
+        Assumes top --left-- of desktop screen is (0,0). Works on macOS. 
+
+        """
+
         x_global, y_global = pyautogui.position()  
         x_win, y_win = self.renderer.window.position 
 
