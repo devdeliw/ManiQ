@@ -6,6 +6,7 @@ from qiskit import QuantumCircuit
 from gates import Gates
 from updaters import global_cursor_to_manim
 from qiskit_functions.convert_to_manim import ConvertToManim
+from update_qc import CircuitUpdate
 
 import ruamel.yaml as yaml 
 import numpy as np 
@@ -125,6 +126,7 @@ class ManiQCircuit(Scene, Gates):
                 'params': params, 
                 'qbits': qbits, 
                 'cbits': cbits, 
+                'gate_id': f'{operation_name}_{''.join(map(str, qbits))}_{start_time}'
             })
 
         # Generate DataFrame
@@ -575,11 +577,35 @@ class ManiQCircuit(Scene, Gates):
         def show_density_plot(): 
             self.play(self.camera.animate.move_to([0, config.frame_height, 0]))
 
+        def update_density_plot(): 
+            self.remove(real_hinton_plot, imag_hinton_plot) 
+            self.render_density_plot()
+            return 
+
+        self.update_density_plot = update_density_plot
         self.show_density_plot = show_density_plot
         return
 
-    def on_mouse_press(self, point, button, modifiers):
+    def remove_gate(self, gate_id):
+        """
+        Removes a specific gate corresponding to 'gate_id' in the scene. 
+        Updates the stored quantum circuit to not contain that gate. 
 
+        """
+
+        # Remove gate from display 
+        self.remove(self.gate_references.get(gate_id)[0]) 
+
+        # Filter circuit dataframe to drop row with specific gate_id
+        self.circuit_data = self.circuit_data[self.circuit_data['gate_id'] != gate_id]
+
+        # Update self.qc attribute
+        updater_instance = CircuitUpdate(self.circuit_data) 
+        self.qc = updater_instance.update_circuit()
+        return
+
+
+    def on_mouse_press(self, point, button, modifiers):
         """
         Runs everytime mouse is pressed in pyglet window
 
@@ -595,7 +621,5 @@ class ManiQCircuit(Scene, Gates):
 
         super().on_mouse_press(point, button, modifiers)
         return 
-
-
 
 

@@ -39,12 +39,10 @@ class CircuitUpdate:
         # Get the minimum # of qubits and clbits of circuit
         num_qbits, num_cbits = 0, 0
         for qbits in self.circuit_data['qbits']:
-            qbits = json.loads(qbits)
             for qbit in qbits: 
                 if qbit > num_qbits: 
                     num_qbits = qbit
         for cbits in self.circuit_data['cbits']: 
-            cbits = json.loads(cbits)
             for cbit in cbits: 
                 if cbit > num_cbits: 
                     num_cbits = cbit
@@ -55,10 +53,10 @@ class CircuitUpdate:
         # Initialize circuit instruction list
         circuit_instructions = []
         for _, element in self.circuit_data.iterrows(): 
-            name = element['qiskit_name'] 
-            qbits = json.loads(element['qbits']) 
-            cbits = json.loads(element['cbits'])
-            params = json.loads(element['params'])
+            name = element['qiskit_names'] 
+            qbits = element['qbits']
+            cbits = element['cbits']
+            params = element['params']
 
             operation = Instruction(
                 name=name, 
